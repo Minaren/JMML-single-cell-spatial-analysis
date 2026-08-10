@@ -1,0 +1,11 @@
+devtools::install_github("sqjin/CellChat")
+
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(SingleR)
+library(cowplot)
+library(tidyverse)
+library(CellChat)
+library("CellChat")

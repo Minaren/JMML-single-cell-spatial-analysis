@@ -1,0 +1,23 @@
+# R
+*.RData
+*.Rhistory
+*.RDataTmp
+*.rds
+*.Rproj
+.Rproj.user/
+
+# Notebooks (rendered)
+*.ipynb_checkpoints/
+
+# Large binaries / generated reports / data files
+*.zip
+*.pdf
+*.png
+*.tif
+*.docx
+*.xlsx
+*.html
+
+# OS
+Thumbs.db
+.DS_Store
