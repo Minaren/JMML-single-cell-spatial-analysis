@@ -21,3 +21,16 @@
 # OS
 Thumbs.db
 .DS_Store
+# Working directories (not part of the release package; kept locally only)
+/code/
+/mouse/
+/human/
+/human_RNAseq/
+/空间转录组/
+/备用/
+/counts转tpm.R
+/GSEA.R
+/R_P.R
+/Treg3.0.R
+/xena.R
+/投稿2.0.R
