@@ -1,0 +1,17 @@
+{
+  "title": "JMML single-cell and spatial transcriptomic analysis code",
+  "upload_type": "software",
+  "version": "1.0.0",
+  "publication_date": "2026-08-31",
+  "description": "Versioned analysis code for single-cell RNA-seq, BMKMANU S1000 spatial transcriptomics, cell-cell communication and survival analyses in Kras-driven JMML.",
+  "license": "MIT",
+  "creators": [
+    {"name": "Ren, Xiaomin"},
+    {"name": "Li, Qiao"},
+    {"name": "Yue, Jingze"},
+    {"name": "Zhang, Linlin"},
+    {"name": "He, Aili"},
+    {"name": "Kong, Guangyao"}
+  ],
+  "keywords": ["JMML", "single-cell RNA sequencing", "spatial transcriptomics", "CD69", "IL-10"]
+}
