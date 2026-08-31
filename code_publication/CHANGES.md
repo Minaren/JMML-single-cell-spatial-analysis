@@ -1,5 +1,16 @@
 # CHANGES.md
 
+## v1.0.0 release preparation (2026-08-31)
+
+- Added version, citation, Zenodo, release-note and validation metadata.
+- Corrected the public human-data mapping to GSE111895 (JMML) and GSE155259
+  (normal pediatric bone marrow).
+- Added generated-data mappings for GSE313553, GSE313878 and GSE313879.
+- Recorded the author-confirmed 6-week age for HSPC scRNA-seq mice.
+- Aligned documented versions with the manuscript: Cell Ranger v6.0.1,
+  Seurat v4.3.0, GSVA v2.2.0, CellChat v1.6.1 and BSTMatrix v1.0.
+- Did not alter scientific analysis logic or resolve other author-dependent items.
+
 Summary of changes applied when converting the original analysis code
 (D:\aJMML\代码\code) into this publication package. The analysis logic and
 parameters were preserved; only structure, paths, comments and dead code were
@@ -50,8 +61,8 @@ modified.
   cluster 1 = CD69low (as in the original code comment). Confirm if the
   manuscript uses a different definition (e.g., expression percentile).
 - Human data integration: original code read local 10x directories JMMLID5 and
-  PBM2. README/data notes map these to GSE155295 (JMML) and GSE111895 (normal
-  pediatric BM); confirm the correspondence and the GEO accessions.
+  PBM2. README/data maps these to GSE111895 (JMML) and GSE155259 (normal
+  pediatric BM), consistent with the manuscript and public GEO records.
 - Spatial: y-coordinate flip (`coords$y <- -coords$y`) preserved from the
   original code. BMKMANU S1000 output format documented in data/README.md.
 - CellPhoneDB: the Python analysis is not part of the R package; the
@@ -74,6 +85,5 @@ modified.
 4. Whether Monocle 2 pseudotime should be retained.
 5. Human HSC GSVA variable construction (see above).
 6. CD69high definition in human HSC (cluster-based vs percentile).
-7. GEO accessions (GSE155295 vs GSE155259 typo; local sample mapping).
-8. T-cell QC parameters and whether each genotype was one pooled library.
-9. pI-pC administration in the bone-marrow transplantation model.
+7. T-cell QC parameters and whether each genotype was one pooled library.
+8. pI-pC administration in the bone-marrow transplantation model.
