@@ -33,10 +33,10 @@ write.csv(pkg_info, file.path("output", "package_versions.csv"), row.names = FAL
 
 # ----------------------------------------------------------------------------
 # External software used outside R (not covered by renv):
-#   - Cell Ranger v6.1.1 (10x Genomics)      : scRNA-seq preprocessing
+#   - Cell Ranger v6.0.1 (10x Genomics)      : scRNA-seq preprocessing
 #   - BSTMatrix v1.0 (Biomarker Technologies): spatial transcriptomics upstream
 #     processing and read mapping (mouse reference genome mm10; version to confirm)
-#   - CellPhoneDB (v4+; version to confirm)  : ligand-receptor analysis
+#   - CellPhoneDB (version/database to confirm): ligand-receptor analysis
 #   - 10x Genomics Chromium Single Cell 3' v3 : library chemistry
 #   - Illumina NovaSeq 6000 (PE150)          : sequencing platform
 # ----------------------------------------------------------------------------
