@@ -16,7 +16,7 @@
 #          (RCTD.rds, Spatial_CellType.tsv, HSC_neighbor_cell_proportion.tsv)
 # Run order: after 00_setup.R; single-cell reference prepared by scripts 01-03
 # NOTE 1: Spatial experiment was performed by Biomarker Technologies (BMKMANU
-#         S1000); raw data are not public (contact the authors / company).
+#         S1000); the deposited study data are available under GSE313878.
 # NOTE 2: The reference cell-type annotation used for RCTD must contain the
 #         cell types of interest (e.g., HSC); cell types with <=25 cells in
 #         the reference are excluded (as in the original analysis).
