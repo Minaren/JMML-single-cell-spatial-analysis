@@ -38,25 +38,25 @@ data/
 
 | Dataset | Accession | Contents |
 |---|---|---|
-| Human JMML scRNA-seq | GSE155295 | JMML bone-marrow mononuclear cells |
-| Normal pediatric BM scRNA-seq | GSE111895 | normal pediatric bone marrow |
+| Human JMML scRNA-seq | GSE111895 | JMML bone-marrow samples, including JMML_ID5 |
+| Normal pediatric BM scRNA-seq | GSE155259 | developmental hematopoiesis dataset, including pediatric BM |
 | JMML bulk RNA-seq + clinical | GSE71449 | bulk expression + Table_S1 clinical data |
 | Healthy mouse BM reference | GSE122465 | bone marrow cell types incl. stroma (Baryawno et al., Cell 2019) |
+| Mouse c-Kit+ HSPC scRNA-seq generated in this study | GSE313553 | WT and KrasG12D/+ HSPCs from 6-week-old mice |
+| Mouse bone-marrow spatial transcriptomics generated in this study | GSE313878 | WT and KrasG12D/+ spatial matrices |
+| NB4 CD69-overexpression bulk RNA-seq generated in this study | GSE313879 | three control and three CD69-OE samples |
 
-NOTE: the manuscript Figure 8 legend lists the JMML scRNA-seq accession as
-GSE155295; the earlier draft methods text contained the typo "GSE155259".
-Please confirm the correct accessions against GEO before submission. The
-original analysis code read local 10x directories (JMMLID5, PBM2); confirm
-the correspondence between these local samples and the accessions above.
+The JMML/normal mapping and 6-week mouse age were checked against public GEO
+records and confirmed by the author. The original analysis code read local 10x
+directories JMMLID5 and PBM2.
 
-## Spatial transcriptomic data (not public)
+## Spatial transcriptomic data
 
 Spatial transcriptomics was performed by Biomarker Technologies Corporation
 (Beijing, China) with the BMKMANU S1000 platform (fresh-frozen sections,
 10 um, H&E staining, 20x bright-field imaging, Illumina NovaSeq 6000 PE150,
->=50,000 reads per spot). The raw data (fastq, HE images, count matrices) are
-not publicly deposited; access is available from the corresponding authors or
-Biomarker Technologies.
+>=50,000 reads per spot). The study's spatial data are publicly available under
+GSE313878. Place the downloaded files into the directory layout below.
 
 BMKMANU S1000 output format (as received, one folder per sample):
 - matrix.mtx.gz        # sparse count matrix (genes x spots)
