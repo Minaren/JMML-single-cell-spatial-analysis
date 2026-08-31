@@ -11,14 +11,19 @@ See `code_publication/README.md` for the script list (00-08), inputs, outputs,
 and run instructions. Raw sequencing data are not included in this repository;
 public data accessions are listed in `code_publication/data/README.md`.
 
+## Release
+
+This repository is prepared as software release `v1.0.0`. See
+`RELEASE_NOTES.md`, `CODE_VALIDATION.md`, and `CITATION.cff`.
+
 ## Environment
 
-- R >= 4.2 (prepared with R 4.6.1)
-- Key R packages: Seurat, harmony, spacexr (RCTD), CellChat (v1.6.1), GSVA
+- R >= 4.2 (the exact analysis-time R version was not retained)
+- Key R packages: Seurat (v4.3.0), harmony, spacexr (RCTD), CellChat (v1.6.1), GSVA
   (v2.2.0), slingshot, mgcv, clusterProfiler, limma, org.Mm.eg.db, survival,
   survminer
-- External: Cell Ranger v6.1.1; CellPhoneDB (v5.0.1; cellphonedb-data v5.0.0);
-  BSTMatrix v1.0 (Biomarker Technologies)
+- External: Cell Ranger v6.0.1; BSTMatrix v1.0 (Biomarker Technologies);
+  CellPhoneDB (exact analysis-time version/database not retained)
 
 ## License
 
