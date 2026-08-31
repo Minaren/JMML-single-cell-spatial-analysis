@@ -13,7 +13,7 @@
 # Run order: after 00_setup.R
 # NOTE: the original code read two local 10x directories (JMMLID5, PBM2).
 #       Confirm the correspondence between these local samples and the public
-#       accessions GSE155295 (JMML) and GSE111895 (normal pediatric BM).
+#       accessions GSE111895 (JMML) and GSE155259 (normal pediatric BM).
 # ============================================================================
 
 source("scripts/00_setup.R")
