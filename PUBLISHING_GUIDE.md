@@ -1,12 +1,13 @@
-# Publishing v1.0.0
+# Published release v1.0.0
 
-No remote branch, tag, GitHub release or Zenodo record was modified during
-packaging.
+The publication code archive has been released and permanently archived.
 
-1. Review `CODE_VALIDATION.md` and resolve available author-dependent items.
-2. Push the release commit and tag: `git push origin main` and
-   `git push origin v1.0.0`.
-3. Create a GitHub release titled `JMML analysis code v1.0.0`.
-4. Connect the repository to Zenodo and mint a version DOI.
-5. Add the DOI to the manuscript's data/code availability statement and its
-   numbered software reference.
+- GitHub repository: <https://github.com/Minaren/JMML-single-cell-spatial-analysis>
+- Canonical GitHub release: <https://github.com/Minaren/JMML-single-cell-spatial-analysis/releases/tag/v1.0.0>
+- Zenodo archive: <https://doi.org/10.5281/zenodo.22207699>
+- Software version: `1.0.0`
+- License: MIT
+
+The `v1.0.0-zenodo` tag points to the same source commit as `v1.0.0` and was
+created solely to trigger Zenodo preservation after repository integration was
+enabled. The citable software version remains `1.0.0`.
