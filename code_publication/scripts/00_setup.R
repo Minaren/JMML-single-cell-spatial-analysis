@@ -11,7 +11,7 @@
 # ============================================================================
 
 suppressPackageStartupMessages({
-  library(Seurat)          # single-cell and spatial analysis (v4.1.0 used in the study)
+  library(Seurat)          # single-cell and spatial analysis (v4.3.0 used in the study)
   library(harmony)         # batch integration
   library(tidyverse)
   library(dplyr)
