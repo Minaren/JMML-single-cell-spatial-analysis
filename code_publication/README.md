@@ -31,17 +31,17 @@ code_publication/
 
 ## Environment
 
-- R >= 4.2 (analysis was performed with R 4.x; R 4.6.1 used during preparation)
-- Key R packages: Seurat (v4.1.0 used in the study; the code is compatible with
+- R >= 4.2 (the exact analysis-time R version was not retained)
+- Key R packages: Seurat (v4.3.0 used in the study; the code is compatible with
   Seurat v5 when `JoinLayers()` is called before layer access),
   harmony, spacexr (RCTD), CellChat (v1.6.1), GSVA (v2.2.0), slingshot, mgcv,
   clusterProfiler, limma, org.Mm.eg.db, survival, survminer
 - External software:
-  - Cell Ranger v6.1.1 (10x Genomics) for scRNA-seq preprocessing
+  - Cell Ranger v6.0.1 (10x Genomics) for scRNA-seq preprocessing
   - BSTMatrix v1.0 (Biomarker Technologies) for spatial transcriptomic upstream
     processing (reads mapped to the mouse reference genome mm10; exact build to
     be confirmed)
-  - CellPhoneDB (v4+; version used by the original analysis to be confirmed)
+  - CellPhoneDB (exact version/database used by the original analysis to be confirmed)
     for ligand-receptor analysis
 - See environment/packages.R for the full package list. To lock a reproducible
   environment with renv: `renv::init()`, install the packages, then
@@ -71,8 +71,9 @@ Rscript scripts/08_cell_cell_communication.R
 1. Mouse HSPC 10x output (this study; Kras and WT) -> data/raw/mouse_HSPC/
 2. Mouse T-cell 10x output (this study; CD45+CD3+ sorted, 3 mice pooled per
    genotype) -> data/raw/mouse_Tcell/
-3. Human JMML and normal pediatric BM 10x output (GSE155295, GSE111895;
-   local samples were named JMMLID5 and PBM2 in the original analysis) ->
+3. Human JMML and normal pediatric BM 10x output (JMML: GSE111895;
+   normal pediatric BM: GSE155259; local samples were named JMMLID5 and PBM2
+   in the original analysis) ->
    data/raw/human_JMML/ and data/raw/human_PB/
 4. Healthy mouse BM reference GSE122465 (notlabel.RDS + metaInfo.txt) ->
    data/reference/GSE122465/
@@ -143,13 +144,19 @@ performed at resolution 1.2; confirm the correspondence if re-running.
   (HSC_counts_filtered, mouse GO:BP sets, CD69_status) that were not defined in
   the shared scripts; script 06 rebuilds them deterministically and uses human
   MSigDB GO:BP sets. Please confirm this matches the analysis as performed.
-- Spatial data are BMKMANU S1000 output; the experimental protocol is described
+- Spatial data are BMKMANU S1000 output and are publicly deposited under
+  GSE313878; the experimental protocol is described
   in the Biomarker Technologies methods document (BMKMANU S1000 Spatial
   transcriptomics Materials and method) and summarised in data/README.md.
 - Uncertain parameters (CellPhoneDB version/database, CellChat exact settings,
   BSTMatrix reference build, Monocle 2 usage, pI-pC administration in the
   transplantation model) are marked with [UNCERTAIN] in the scripts and listed
   in CHANGES.md.
+
+## Reproducibility record
+
+Run `Rscript environment/capture_session_info.R` after installing the required
+packages. The release is identified by the `v1.0.0` tag and `VERSION` file.
 
 ## Outputs
 
@@ -158,6 +165,6 @@ See output/README.md for the expected outputs per script.
 ## License / data availability
 
 Analysis code is shared for reproducibility. Raw sequencing data of this study
-are available from the corresponding authors on request; public datasets are
-listed in data/README.md. Spatial transcriptomic data and images are property
-of the study and Biomarker Technologies; access on request.
+are deposited under the GEO accessions listed in data/README.md. Supporting
+materials not included in GEO are available from the corresponding authors on
+reasonable request.
