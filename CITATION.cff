@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "Please cite the associated article and this archived software version."
+title: "JMML single-cell and spatial transcriptomic analysis code"
+type: software
+version: 1.0.0
+date-released: 2026-08-31
+license: MIT
+repository-code: "https://github.com/Minaren/JMML-single-cell-spatial-analysis"
+authors:
+  - family-names: Ren
+    given-names: Xiaomin
+  - family-names: Li
+    given-names: Qiao
+  - family-names: Yue
+    given-names: Jingze
+  - family-names: Zhang
+    given-names: Linlin
+  - family-names: He
+    given-names: Aili
+  - family-names: Kong
+    given-names: Guangyao
+keywords: [JMML, single-cell RNA sequencing, spatial transcriptomics, CD69, IL-10]
