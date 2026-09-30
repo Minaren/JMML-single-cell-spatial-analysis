@@ -1,11 +1,15 @@
 Software	Version	Status_or_note
-R	>=4.2	Exact analysis-time version not retained
+R	>=4.5	Bioconductor 3.21 is required for GSVA 2.2.0; exact patch version not retained
+Bioconductor	3.21	Required for GSVA 2.2.0
 Seurat	4.3.0	Reported in manuscript
 GSVA	2.2.0	Reported in manuscript
-CellChat	1.6.1	Reported in manuscript
+DESeq2	Not recorded	Capture from the v1.1.0 rerun environment
+CellChat	1.6.1	Reported in manuscript; exact inference code/parameters were not retained
 Cell Ranger	6.0.1	Reported in manuscript
 BSTMatrix	1.0	Reported in manuscript
-CellPhoneDB	Not recorded	Confirm software and database versions
+CellPhoneDB	5.x	Exact version and database checksum are written by 08_run_cellphonedb.py
 spacexr/RCTD	Not recorded	Capture from analysis environment
 Harmony	Not recorded	Capture from analysis environment
 Slingshot	Not recorded	Capture from analysis environment
+RANN	Not recorded	Capture from analysis environment
+igraph	Not recorded	Used only for plotting CellPhoneDB interaction-count networks
