@@ -23,8 +23,9 @@ sce.harm <- readRDS(file.path(output_dir, "human_bone_marrow.rds"))
 
 # --- 1. HSC sub-clustering ---------------------------------------------------
 HSC <- subset(sce.harm, idents = "HSC")
-HSC <- ScaleData(HSC)
-HSC <- RunPCA(HSC)
+HSC <- FindVariableFeatures(HSC, selection.method = "vst", nfeatures = 2000)
+HSC <- ScaleData(HSC, features = VariableFeatures(HSC))
+HSC <- RunPCA(HSC, features = VariableFeatures(HSC))
 HSC <- FindNeighbors(HSC, dims = 1:30)
 HSC <- FindClusters(HSC, resolution = 0.8)
 HSC <- RunUMAP(HSC, dims = 1:30)
@@ -48,43 +49,60 @@ proliferation_gene_sets <- list(
 HSC <- AddModuleScore(HSC, features = list(unique(unlist(proliferation_gene_sets))),
                       name = "Proliferation_Score")
 
-# --- 3. GSVA pathway activity (CD69high vs CD69low) --------------------------
-# NOTE: the original human HSC GSVA block referenced workspace variables
-#       (HSC_counts_filtered, mouse GO:BP sets, CD69_status). These are
-#       rebuilt here deterministically; MSigDB human C5 GO:BP sets are used
-#       (the original code referenced the mouse set by mistake).
+# --- 3. descriptive GSVA pathway activity (CD69high vs CD69low) ------------
+# Scores are calculated from average log-normalized expression for the two
+# HSC states. The underlying public analysis contains no independent library
+# replicates for cell-level pathway inference, so no cell-as-replicate limma
+# P values are reported.
 library(msigdbr)
-HSC_counts <- as.matrix(GetAssayData(HSC, assay = "RNA", layer = "counts"))
-cells_use <- WhichCells(HSC, idents = c("0", "1"))
-human_GO_bp <- msigdbr(species = "Homo sapiens", category = "C5", subcategory = "GO:BP") %>%
-  dplyr::select(gs_name, gene_symbol)
-human_GO_bp_Set <- split(human_GO_bp$gene_symbol, human_GO_bp$gs_name)
-HSC_gsva <- gsva(HSC_counts[, cells_use], human_GO_bp_Set, kcdf = "Poisson", parallel.sz = 4)
-
-group <- factor(HSC@meta.data[cells_use, "CD69_status"])
-design <- model.matrix(~ 0 + group); colnames(design) <- levels(group)
-fit <- lmFit(HSC_gsva, design)
-cont <- makeContrasts(CD69high_vs_low = CD69high - CD69low, levels = design)
-fit2 <- eBayes(contrasts.fit(fit, cont))
-diff <- topTable(fit2, adjust = "fdr", number = Inf)
-diff$ID <- rownames(diff)
-write.csv(diff, file.path(output_dir, "human_HSC_GSVA_diff.csv"))
+cells_use <- rownames(HSC@meta.data)[HSC$CD69_status %in% c("CD69high", "CD69low")]
+HSC_pair <- subset(HSC, cells = cells_use)
+HSC_avg <- AverageExpression(HSC_pair, assays = "RNA", group.by = "CD69_status",
+                             slot = "data", verbose = FALSE)[[1]]
+HSC_avg <- as.matrix(HSC_avg[rowSums(HSC_avg) > 0, , drop = FALSE])
+human_GO_bp_Set <- get_msigdb_sets("Homo sapiens", "C5", "GO:BP")
+HSC_gsva <- run_gsva(HSC_avg, human_GO_bp_Set, kcdf = "Gaussian")
+if (!all(c("CD69high", "CD69low") %in% colnames(HSC_gsva))) {
+  stop("Human HSC GSVA output lacks CD69high or CD69low.")
+}
+diff <- data.frame(
+  pathway = rownames(HSC_gsva),
+  CD69high = HSC_gsva[, "CD69high"],
+  CD69low = HSC_gsva[, "CD69low"],
+  CD69high_minus_CD69low = HSC_gsva[, "CD69high"] - HSC_gsva[, "CD69low"],
+  inference = "descriptive_only_no_independent_library_replicates",
+  row.names = NULL
+)
+write.csv(diff, file.path(output_dir, "human_HSC_GSVA_descriptive.csv"), row.names = FALSE)
 
 # --- 4. CD69high HSC gene signature ------------------------------------------
 Idents(HSC) <- "seurat_clusters"
-HSC <- JoinLayers(HSC)
-hsc_markers <- FindAllMarkers(HSC, only.pos = TRUE, logfc.threshold = 0.25,
-                              min.pct = 0.1, test.use = "wilcox")
+hsc_markers <- FindMarkers(HSC, ident.1 = "0", ident.2 = "1",
+                           only.pos = FALSE, logfc.threshold = 0.25,
+                           min.pct = 0.1, test.use = "wilcox")
+hsc_markers$gene <- rownames(hsc_markers)
 write.csv(hsc_markers, file.path(output_dir, "HSC_CD69high_vs_low_markers.csv"), row.names = FALSE)
-genes_high <- hsc_markers$gene[hsc_markers$cluster == "0"]
-genes_low  <- hsc_markers$gene[hsc_markers$cluster == "1"]
+genes_high <- hsc_markers$gene[hsc_markers$avg_log2FC > 0.25 & hsc_markers$p_val_adj < 0.05]
+genes_low  <- hsc_markers$gene[hsc_markers$avg_log2FC < -0.25 & hsc_markers$p_val_adj < 0.05]
+if (length(genes_high) < 10L || length(genes_low) < 10L) {
+  stop("Fewer than 10 significant genes in the CD69high or CD69low signature.")
+}
 
 saveRDS(HSC, file.path(output_dir, "human_HSC.rds"))
 
 # --- 5. bulk ssGSEA scoring and survival -------------------------------------
-bulk_raw <- read.delim(file.path(bulk_dir, "GSE71449", "ids_exprs.csv"),
+bulk_expr_file <- file.path(bulk_dir, "GSE71449", "ids_exprs.csv")
+clinical_file <- file.path(bulk_dir, "GSE71449", "Table_S1.xlsx")
+require_files(c(bulk_expr_file, clinical_file))
+bulk_raw <- read.delim(bulk_expr_file,
                        sep = ",", row.names = 1, check.names = FALSE)
 bulk_expr_mat <- as.matrix(bulk_raw); mode(bulk_expr_mat) <- "numeric"
+if (anyNA(bulk_expr_mat) || any(!is.finite(bulk_expr_mat))) {
+  stop("GSE71449 expression matrix contains missing or non-finite values.")
+}
+if (anyDuplicated(colnames(bulk_expr_mat))) {
+  stop("GSE71449 expression matrix contains duplicated sample IDs.")
+}
 rownames(bulk_expr_mat) <- toupper(rownames(bulk_expr_mat))
 if (any(duplicated(rownames(bulk_expr_mat)))) {
   bulk_df <- as.data.frame(bulk_expr_mat)
@@ -95,30 +113,61 @@ if (any(duplicated(rownames(bulk_expr_mat)))) {
 }
 gene_sets <- list(HSC_CD69high = intersect(toupper(genes_high), rownames(bulk_expr_mat)),
                   HSC_CD69low  = intersect(toupper(genes_low),  rownames(bulk_expr_mat)))
-if (packageVersion("GSVA") >= "1.50.0") {
-  gsva_res <- gsva(gsvaParam(bulk_expr_mat, gene_sets, kcdf = "Gaussian"), verbose = FALSE)
-} else {
-  gsva_res <- gsva(bulk_expr_mat, gene_sets, method = "ssgsea", kcdf = "Gaussian")
+if (any(lengths(gene_sets) < 10L)) {
+  stop("Insufficient signature overlap with GSE71449 expression matrix: ",
+       paste(names(gene_sets), lengths(gene_sets), sep = "=", collapse = ", "))
 }
+write.csv(data.frame(signature = names(gene_sets), n_genes = lengths(gene_sets)),
+          file.path(output_dir, "HSC_signature_overlap_GSE71449.csv"), row.names = FALSE)
+gsva_res <- run_ssgsea(bulk_expr_mat, gene_sets)
 hsc_high_score <- gsva_res["HSC_CD69high", ]
 
-clinical <- readxl::read_excel(file.path(bulk_dir, "GSE71449", "Table_S1.xlsx"))
+clinical <- readxl::read_excel(clinical_file)
+required_clinical <- c("ID", "Survival from diagnosis\r\n(days)",
+                       "age at diagnosis\r\n(years)",
+                       "Karyotype", "Mutation")
+missing_clinical <- setdiff(required_clinical, names(clinical))
+if (length(missing_clinical)) {
+  stop("Missing required GSE71449 clinical column(s): ",
+       paste(missing_clinical, collapse = ", "))
+}
 clinical$SampleID <- as.character(clinical$ID)
 clinical$diag_survival_days <- as.numeric(clinical[["Survival from diagnosis\r\n(days)"]])
-clinical$diag_event <- ifelse(!is.na(clinical[["Cause of death"]]) &
-                                clinical[["Cause of death"]] != "", 1, 0)
+# Prefer an explicit vital/event-status field. If the public table has none,
+# retain the original cause-of-death rule but record that fallback in the
+# exported audit table so that it can be checked against the source dataset.
+status_candidates <- c("diag_event", "OS_event", "Event", "event",
+                       "Vital status", "Vital Status", "Status")
+status_col <- status_candidates[status_candidates %in% names(clinical)][1]
+if (!is.na(status_col)) {
+  raw_status <- tolower(trimws(as.character(clinical[[status_col]])))
+  clinical$diag_event <- ifelse(raw_status %in% c("1", "dead", "deceased", "death", "event"), 1,
+                                ifelse(raw_status %in% c("0", "alive", "censored", "no event"), 0,
+                                       NA_real_))
+  event_definition <- paste0("explicit_status_column:", status_col)
+} else {
+  if (!"Cause of death" %in% names(clinical)) {
+    stop("No explicit survival-status column or Cause of death column was found.")
+  }
+  clinical$diag_event <- ifelse(!is.na(clinical[["Cause of death"]]) &
+                                  trimws(as.character(clinical[["Cause of death"]])) != "", 1, 0)
+  event_definition <- "fallback_nonempty_cause_of_death"
+  warning("No explicit survival-status column found; event status was inferred from non-empty Cause of death. Review before publication.")
+}
 clinical$HSC_CD69high_score <- hsc_high_score[match(clinical$SampleID, names(hsc_high_score))]
 clinical_valid <- clinical[!is.na(clinical$HSC_CD69high_score) &
                              !is.na(clinical$diag_survival_days) &
                              !is.na(clinical$diag_event), ]
 
-# median split and optimal cutoff
+# Prespecified median split used in the manuscript.
 clinical_valid$group_high <- ifelse(clinical_valid$HSC_CD69high_score >
                                       median(clinical_valid$HSC_CD69high_score), "High", "Low")
-cut <- surv_cutpoint(clinical_valid, time = "diag_survival_days", event = "diag_event",
-                     variables = "HSC_CD69high_score")
-clinical_valid$group_optimal <- ifelse(clinical_valid$HSC_CD69high_score > cut$cutpoint$cutpoint,
-                                       "High", "Low")
+if (nrow(clinical_valid) != 44L) {
+  warning("Expected 44 evaluable GSE71449 patients but found ", nrow(clinical_valid), ".")
+}
+clinical_valid$event_definition <- event_definition
+write.csv(clinical_valid, file.path(output_dir, "HSC_CD69high_survival_table.csv"),
+          row.names = FALSE)
 
 # KM + log-rank (median split)
 surv_obj <- Surv(time = clinical_valid$diag_survival_days, event = clinical_valid$diag_event)
@@ -133,15 +182,73 @@ dev.off()
 # Cox models
 clinical_valid <- clinical_valid %>%
   mutate(age_years = as.numeric(.data[["age at diagnosis\r\n(years)"]]),
-         monosomy7 = ifelse(Karyotype == "mono7", 1, 0),
-         mut_group = factor(case_when(Mutation == "PTPN11" ~ "PTPN11",
-                                      Mutation == "quad neg" ~ "Quad_neg",
+         monosomy7 = ifelse(grepl("mono7|monosomy[ -]?7|(^|[^0-9])-7([^0-9]|$)",
+                                  Karyotype, ignore.case = TRUE), 1, 0),
+         mutation_normalized = tolower(trimws(as.character(Mutation))),
+         mut_group = factor(case_when(grepl("^ptpn11", mutation_normalized) ~ "PTPN11",
+                                      grepl("quad.*neg", mutation_normalized) ~ "Quad_neg",
                                       TRUE ~ "Other"),
                             levels = c("PTPN11", "Other", "Quad_neg")))
-cox_multi <- coxph(Surv(diag_survival_days, diag_event) ~ HSC_CD69high_score + age_years +
-                     monosomy7 + mut_group, data = clinical_valid)
-write.csv(as.data.frame(summary(cox_multi)$conf.int),
-          file.path(output_dir, "HSC_CD69high_multivariate_Cox.csv"))
+
+tidy_cox <- function(model, model_name) {
+  sm <- summary(model)
+  data.frame(
+    model = model_name,
+    term = rownames(sm$coefficients),
+    HR = sm$conf.int[, "exp(coef)"],
+    CI95_low = sm$conf.int[, "lower .95"],
+    CI95_high = sm$conf.int[, "upper .95"],
+    P_value = sm$coefficients[, "Pr(>|z|)"],
+    n = model$n,
+    events = model$nevent,
+    row.names = NULL,
+    check.names = FALSE
+  )
+}
+
+# Supplementary Table S6: univariable Cox models.
+univariable_formulas <- list(
+  HSC_CD69high_score = Surv(diag_survival_days, diag_event) ~ HSC_CD69high_score,
+  age_years = Surv(diag_survival_days, diag_event) ~ age_years,
+  monosomy7 = Surv(diag_survival_days, diag_event) ~ monosomy7,
+  mut_group = Surv(diag_survival_days, diag_event) ~ mut_group
+)
+cox_uni <- bind_rows(lapply(names(univariable_formulas), function(nm) {
+  model <- coxph(univariable_formulas[[nm]], data = clinical_valid,
+                 na.action = na.omit, x = TRUE)
+  tidy_cox(model, paste0("univariable_", nm))
+}))
+write.csv(cox_uni, file.path(output_dir, "Table_S6_univariable_Cox.csv"), row.names = FALSE)
+
+# Figure 8H: multivariable Cox model, fit on one explicit complete-case set.
+model_vars <- c("diag_survival_days", "diag_event", "HSC_CD69high_score",
+                "age_years", "monosomy7", "mut_group")
+cox_data <- clinical_valid[complete.cases(clinical_valid[, model_vars]), ]
+cox_multi <- coxph(Surv(diag_survival_days, diag_event) ~ HSC_CD69high_score +
+                       age_years + monosomy7 + mut_group,
+                     data = cox_data, x = TRUE)
+cox_multi_tidy <- tidy_cox(cox_multi, "multivariable_Figure_8H")
+write.csv(cox_multi_tidy,
+          file.path(output_dir, "Figure_8H_multivariable_Cox.csv"), row.names = FALSE)
+
+n_parameters <- sum(!is.na(coef(cox_multi)))
+events_per_parameter <- cox_multi$nevent / n_parameters
+model_audit <- data.frame(
+  n_complete_cases = cox_multi$n,
+  n_events = cox_multi$nevent,
+  n_fitted_parameters = n_parameters,
+  events_per_parameter = events_per_parameter
+)
+write.csv(model_audit, file.path(output_dir, "Figure_8H_model_audit.csv"),
+          row.names = FALSE)
+if (events_per_parameter < 10) {
+  warning("Figure 8H has fewer than 10 events per fitted Cox parameter; interpret as exploratory.")
+}
+
+ph_test <- as.data.frame(cox.zph(cox_multi)$table)
+ph_test$term <- rownames(ph_test)
+write.csv(ph_test, file.path(output_dir, "Figure_8H_proportional_hazards_test.csv"),
+          row.names = FALSE)
 pdf(file.path(fig_dir, "Forest_plot_multivariate.pdf"), width = 9, height = 5)
-ggforest(cox_multi, data = clinical_valid)
+ggforest(cox_multi, data = cox_data)
 dev.off()
