@@ -1,13 +1,10 @@
 # ============================================================================
 # Script: 08_cell_cell_communication.R
-# Purpose: Visualisation and interpretation of cell-cell communication
-#          inferred from the spatial transcriptomic data:
-#          (1) CellPhoneDB interaction networks (circle plots) and
-#              HSC-centred ligand-receptor dot plots;
-#          (2) CellChat-based communication inference on the deconvoluted
-#              spatial data.
+# Purpose: Visualisation of CellPhoneDB communication results inferred from
+#          the spatial transcriptomic data: interaction networks and
+#          HSC-centred ligand-receptor dot plots.
 # Inputs:  output/cellphonedb/ST_WT/ and output/cellphonedb/ST_Kras/
-#          (CellPhoneDB output files: counts_network.txt, pvalues.txt,
+#          (CellPhoneDB output files: count_network.txt, pvalues.txt,
 #          means.txt, significant_means.txt)
 #          output/spatial/ST_*_RCTD-annotated spot labels (Spatial_CellType.tsv)
 # Outputs: figures/CellPhoneDB_net_circle_*.pdf,
@@ -15,16 +12,15 @@
 # Run order: after 07_spatial_transcriptomics_analysis.R, after running
 #          CellPhoneDB (see README.md "Cell-cell communication" section for
 #          the required command)
-# NOTE 1: CellPhoneDB (v4+) is a Python tool and must be run separately on the
-#         RCTD-annotated spots (counts + meta files). Its output files are
-#         then read here for visualisation. Version and database used by the
-#         original analysis are to be confirmed by the authors.
+# NOTE 1: CellPhoneDB is run separately after mouse-to-human orthologue
+#         conversion by 08_prepare_cellphonedb_inputs.py and the versioned
+#         08_run_cellphonedb.py entry point, which records package/database
+#         versions and checksums.
 # NOTE 2: HSC-centred dot plots are filtered at p.cutoff = 0.05.
 # ============================================================================
 
 source("scripts/00_setup.R")
-suppressPackageStartupMessages(library(CellChat))  # v1.6.1 used in the study
-suppressPackageStartupMessages(library(reshape2))
+suppressPackageStartupMessages(library(igraph))
 
 cpdb_dir <- file.path(output_dir, "cellphonedb")
 
@@ -33,32 +29,66 @@ cellphoneDB_Dotplot <- function(pvals.data, means.data, key,
                                 target.cells_1, p.cutoff = 0.05) {
   colnames(pvals.data) <- str_replace_all(colnames(pvals.data), "\\.", "_")
   colnames(means.data) <- str_replace_all(colnames(means.data), "\\.", "_")
-  kp <- Reduce(`|`, lapply(target.cells_1, grepl, x = colnames(pvals.data)))
-  pos <- which(kp)
-  pvals <- pvals.data[, c(1, 2, 5, 6, 8, 9, pos)]
-  means <- means.data[, c(1, 2, 5, 6, 8, 9, pos)]
-  pvals <- pvals[rowSums(pvals[, 7:ncol(pvals)] < p.cutoff) > 0, ]
-  means <- means[means$id_cp_interaction %in% pvals$id_cp_interaction, ]
-  df <- merge(reshape2::melt(pvals, id.vars = "interacting_pair"),
-              reshape2::melt(means, id.vars = "interacting_pair"),
-              by = c("interacting_pair", "variable"))
-  ggplot(df, aes(variable, interacting_pair)) +
-    geom_point(aes(size = -log10(value.x + 1e-4), colour = log2(value.y + 1))) +
+  pair_cols <- intersect(grep("\\|", colnames(pvals.data), value = TRUE),
+                         grep("\\|", colnames(means.data), value = TRUE))
+  keep_pair <- Reduce(`|`, lapply(target.cells_1, function(cell) {
+    grepl(paste0("(^|\\|)", cell, "(\\||$)"), pair_cols)
+  }))
+  pair_cols <- pair_cols[keep_pair]
+  if (!length(pair_cols)) stop("No HSC-centred CellPhoneDB cell-pair columns were found.")
+
+  id_cols <- intersect(c("id_cp_interaction", "interacting_pair"),
+                       intersect(colnames(pvals.data), colnames(means.data)))
+  if (!"interacting_pair" %in% id_cols) {
+    stop("CellPhoneDB outputs lack the interacting_pair column.")
+  }
+  p_long <- pvals.data %>%
+    select(all_of(c(id_cols, pair_cols))) %>%
+    pivot_longer(all_of(pair_cols), names_to = "cell_pair", values_to = "p_value")
+  m_long <- means.data %>%
+    select(all_of(c(id_cols, pair_cols))) %>%
+    pivot_longer(all_of(pair_cols), names_to = "cell_pair", values_to = "mean")
+  df <- inner_join(p_long, m_long, by = c(id_cols, "cell_pair")) %>%
+    filter(is.finite(p_value), is.finite(mean), p_value < p.cutoff)
+  if (!nrow(df)) stop("No HSC-centred interactions passed P < ", p.cutoff, ".")
+
+  ggplot(df, aes(x = cell_pair, y = interacting_pair)) +
+    geom_point(aes(size = -log10(pmax(p_value, 1e-300)),
+                   colour = log2(mean + 1))) +
     scale_colour_gradientn(colours = c("#3A5978", "#F6B31D", "#DA2328")) +
     theme_bw() + labs(x = "", y = "", title = paste("CellPhoneDB:", key))
 }
 
 for (s in c("ST_WT", "ST_Kras")) {
   d <- file.path(cpdb_dir, s)
+  require_files(file.path(d, c("count_network.txt", "pvalues.txt", "means.txt")))
   df.net <- read.table(file.path(d, "count_network.txt"), header = TRUE, sep = "\t")
-  df.net <- spread(df.net, TARGET, count)
+  required_network_cols <- c("SOURCE", "TARGET", "count")
+  if (!all(required_network_cols %in% colnames(df.net))) {
+    stop("count_network.txt for ", s, " lacks SOURCE, TARGET or count.")
+  }
+  cell_types <- sort(unique(c(df.net$SOURCE, df.net$TARGET)))
+  df.net <- df.net %>%
+    complete(SOURCE = cell_types, TARGET = cell_types, fill = list(count = 0)) %>%
+    arrange(match(SOURCE, cell_types), match(TARGET, cell_types)) %>%
+    pivot_wider(names_from = TARGET, values_from = count, values_fill = 0)
   rownames(df.net) <- df.net$SOURCE
-  df.net <- as.matrix(df.net[, -1])
+  df.net <- as.matrix(df.net[, cell_types, drop = FALSE])
   pvals_stat <- read.delim(file.path(d, "pvalues.txt"), check.names = FALSE)
   means_stat <- read.delim(file.path(d, "means.txt"), check.names = FALSE)
 
   pdf(file.path(fig_dir, paste0("CellPhoneDB_net_circle_", s, ".pdf")))
-  netVisual_circle(df.net, weight.scale = TRUE, label.edge = FALSE)
+  graph <- igraph::graph_from_adjacency_matrix(df.net, mode = "directed",
+                                               weighted = TRUE, diag = FALSE)
+  edge_weights <- igraph::E(graph)$weight
+  edge_width <- if (length(edge_weights) && max(edge_weights) > 0) {
+    0.5 + 4.5 * edge_weights / max(edge_weights)
+  } else {
+    0.5
+  }
+  plot(graph, layout = igraph::layout_in_circle(graph), edge.width = edge_width,
+       edge.arrow.size = 0.25, vertex.size = 18, vertex.label.cex = 0.75,
+       main = paste("CellPhoneDB interaction counts:", s))
   dev.off()
 
   pdf(file.path(fig_dir, paste0("CellPhoneDB_DotPlot_HSC_", s, ".pdf")),
@@ -66,11 +96,3 @@ for (s in c("ST_WT", "ST_Kras")) {
   print(cellphoneDB_Dotplot(pvals_stat, means_stat, key = "HSC", target.cells_1 = c("HSC")))
   dev.off()
 }
-
-# --- 2. CellChat inference on deconvoluted spatial data ----------------------
-# CellChat was applied to the RCTD-annotated spatial data (CellChatDB.mouse).
-# Build a meta object per sample from the spatial annotations and run the
-# standard CellChat workflow (createCellChat -> identifyOverExpressedGenes ->
-# computeCommunProb -> filterCommunication -> netVisual_circle).
-# NOTE: exact CellChat parameters (nboot, type) used in the original analysis
-#       are to be confirmed; defaults of CellChat v1.6.1 were used.
