@@ -24,6 +24,7 @@
 
 source("scripts/00_setup.R")
 suppressPackageStartupMessages(library(spacexr))   # RCTD deconvolution
+suppressPackageStartupMessages(library(RANN))      # memory-safe nearest-neighbour search
 
 spatial_out <- file.path(output_dir, "spatial")
 dir.create(spatial_out, showWarnings = FALSE, recursive = TRUE)
@@ -36,7 +37,13 @@ HSC_name    <- "HSC"
 radius      <- 100    # HSC neighborhood radius (coordinate units)
 
 # --- 1. RCTD reference -------------------------------------------------------
+require_files(c(scmeta, anno))
 sc_counts <- read.table(scmeta, header = TRUE, row.names = 1, check.names = FALSE)
+sc_counts <- as.matrix(sc_counts)
+storage.mode(sc_counts) <- "numeric"
+if (anyNA(sc_counts) || any(sc_counts < 0)) {
+  stop("Single-cell RCTD reference contains missing or negative counts.")
+}
 sc_nUMI   <- colSums(sc_counts)
 cellType  <- read.table(anno, header = FALSE, sep = "\t", check.names = FALSE)
 colnames(cellType) <- c("barcode", "cell_type")
@@ -46,13 +53,24 @@ cellType <- cellType[cellType$cell_type %in%
 cell_types <- setNames(as.character(cellType$cell_type), cellType$barcode)
 cell_types <- as.factor(cell_types)
 sc_counts <- sc_counts[, colnames(sc_counts) %in% names(cell_types)]
-sc_nUMI   <- sc_nUMI[names(cell_types)]
+cell_types <- cell_types[colnames(sc_counts)]
+sc_nUMI   <- sc_nUMI[colnames(sc_counts)]
+if (!identical(colnames(sc_counts), names(cell_types)) ||
+    !identical(colnames(sc_counts), names(sc_nUMI))) {
+  stop("Single-cell reference counts, annotations and nUMI are not aligned.")
+}
 reference <- Reference(sc_counts, cell_types, sc_nUMI)
 
 # --- 2. per-sample RCTD deconvolution ----------------------------------------
 for (s in c("ST_WT", "ST_Kras")) {
   cat("Processing", s, "\n")
   stmat <- file.path(spatial_dir, s)
+  sample_out <- file.path(spatial_out, s)
+  dir.create(sample_out, showWarnings = FALSE, recursive = TRUE)
+  require_files(c(file.path(stmat, "barcodes_pos.tsv.gz"),
+                  file.path(stmat, "matrix.mtx.gz"),
+                  file.path(stmat, "barcodes.tsv.gz"),
+                  file.path(stmat, "features.tsv.gz")))
   coords <- read.table(gzfile(file.path(stmat, "barcodes_pos.tsv.gz")),
                        sep = "\t", header = FALSE)
   colnames(coords) <- c("barcode", "x", "y")
@@ -62,30 +80,55 @@ for (s in c("ST_WT", "ST_Kras")) {
   expr <- Read10X(stmat, gene.column = 2)
   sp_obj <- CreateSeuratObject(expr, assay = "Spatial",
                                min.cells = min_cells, min.features = min_features)
-  sp_counts <- as.matrix(sp_obj@assays$Spatial@counts)
+  sp_counts <- get_assay_matrix(sp_obj, assay = "Spatial", slot = "counts")
+  common_barcodes <- intersect(colnames(sp_counts), rownames(coords))
+  if (!length(common_barcodes)) {
+    stop("No shared barcodes between the count matrix and coordinates for ", s, ".")
+  }
+  sp_counts <- sp_counts[, common_barcodes, drop = FALSE]
+  coords <- coords[common_barcodes, c("x", "y"), drop = FALSE]
+  if (!identical(colnames(sp_counts), rownames(coords))) {
+    stop("Count-matrix columns and coordinate rows are not aligned for ", s, ".")
+  }
   sp_nUMI   <- colSums(sp_counts)
   puck <- SpatialRNA(coords, sp_counts, sp_nUMI)
 
   myRCTD <- create.RCTD(puck, reference, max_cores = 8, CELL_MIN_INSTANCE = 20)
   myRCTD <- run.RCTD(myRCTD, doublet_mode = "doublet")
-  saveRDS(myRCTD, file.path(spatial_out, s, "RCTD.rds"))
+  saveRDS(myRCTD, file.path(sample_out, "RCTD.rds"))
 
   res_df <- myRCTD@results$results_df
-  valid_bc <- rownames(res_df[res_df$spot_class != "reject" & puck@nUMI >= 1, ])
+  result_barcodes <- intersect(rownames(res_df), names(puck@nUMI))
+  if (!length(result_barcodes)) {
+    stop("RCTD results and spatial nUMI have no shared barcodes for ", s, ".")
+  }
+  valid_bc <- result_barcodes[
+    res_df[result_barcodes, "spot_class"] != "reject" & puck@nUMI[result_barcodes] >= 1
+  ]
+  if (!length(valid_bc)) stop("RCTD retained no non-rejected spots for ", s, ".")
   anno_df <- puck@coords[valid_bc, ]
-  anno_df$cell_type <- res_df[valid_bc, "first_type"]
+  anno_df$cell_type <- as.character(res_df[valid_bc, "first_type"])
   write.table(anno_df %>% rownames_to_column("barcode"),
-              file.path(spatial_out, s, "Spatial_CellType.tsv"),
+              file.path(sample_out, "Spatial_CellType.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
 
   # --- 3. HSC neighborhood composition ---------------------------------------
   hsc_coords <- anno_df[anno_df$cell_type == HSC_name, ]
-  dist_mat <- as.matrix(dist(anno_df[, c("x", "y")]))
-  neighbor_idx <- which(apply(dist_mat[, rownames(hsc_coords)], 1,
-                              function(x) any(x <= radius)))
+  if (!nrow(hsc_coords)) {
+    stop("No spots annotated as HSC for ", s,
+         "; HSC-neighbourhood composition cannot be calculated.")
+  }
+  # Nearest-HSC lookup avoids constructing an all-spots-by-all-spots distance
+  # matrix, which is not feasible for the high-density BMKMANU S1000 output.
+  nn <- RANN::nn2(data = as.matrix(hsc_coords[, c("x", "y")]),
+                  query = as.matrix(anno_df[, c("x", "y")]), k = 1)
+  neighbor_idx <- which(nn$nn.dists[, 1] <= radius)
   neighbor_cells <- anno_df[neighbor_idx, ]
   neighbor_cells <- neighbor_cells[neighbor_cells$cell_type != HSC_name, ]
+  if (!nrow(neighbor_cells)) {
+    stop("No non-HSC neighbours found within radius ", radius, " for ", s, ".")
+  }
   prop_df <- neighbor_cells %>% count(cell_type) %>% mutate(prop = n / sum(n))
-  write.table(prop_df, file.path(spatial_out, s, "HSC_neighbor_cell_proportion.tsv"),
+  write.table(prop_df, file.path(sample_out, "HSC_neighbor_cell_proportion.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
 }
