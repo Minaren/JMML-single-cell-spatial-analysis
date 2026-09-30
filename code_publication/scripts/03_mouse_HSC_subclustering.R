@@ -19,8 +19,9 @@ sce.harm <- readRDS(file.path(output_dir, "mouse_HSPC_annotated.rds"))
 
 # --- 1. HSC sub-clustering --------------------------------------------------
 HSC <- subset(sce.harm, celltype == "HSC")
-HSC <- ScaleData(HSC, vars.to.regress = c("nCount_RNA", "percent.mt"), verbose = FALSE)
 HSC <- FindVariableFeatures(HSC, nfeatures = 4000)
+HSC <- ScaleData(HSC, features = VariableFeatures(HSC),
+                 vars.to.regress = c("nCount_RNA", "percent.mt"), verbose = FALSE)
 HSC <- RunPCA(HSC, npcs = 50, verbose = FALSE)
 HSC <- FindNeighbors(HSC, reduction = "pca", dims = 1:50)
 HSC <- FindClusters(HSC, resolution = 0.8)
@@ -70,6 +71,26 @@ module_list <- list(
   KRAS_Signaling        = kras_genes
 )
 
+# Most published pathway lists use human-style upper-case symbols. Convert
+# them to mouse symbol case, then retain only genes present in this object.
+# The retained/missing counts are written for audit rather than being hidden.
+mouse_symbol_case <- function(x) {
+  paste0(toupper(substr(x, 1, 1)), tolower(substr(x, 2, nchar(x))))
+}
+module_list <- lapply(module_list, mouse_symbol_case)
+module_overlap <- bind_rows(lapply(names(module_list), function(nm) {
+  present <- intersect(unique(module_list[[nm]]), rownames(HSC))
+  missing <- setdiff(unique(module_list[[nm]]), rownames(HSC))
+  data.frame(module = nm, n_present = length(present), n_missing = length(missing),
+             missing_genes = paste(missing, collapse = ";"))
+}))
+module_list <- lapply(module_list, function(x) intersect(unique(x), rownames(HSC)))
+write.csv(module_overlap, file.path(output_dir, "HSC_module_gene_overlap.csv"),
+          row.names = FALSE)
+if (any(lengths(module_list) < 5L)) {
+  stop("At least one HSC module has fewer than five genes present; see HSC_module_gene_overlap.csv.")
+}
+
 old_cols <- grep("_Score$", colnames(HSC@meta.data), value = TRUE)
 if (length(old_cols)) HSC@meta.data <- HSC@meta.data[, !colnames(HSC@meta.data) %in% old_cols]
 
@@ -80,20 +101,21 @@ for (nm in names(module_list)) {
 }
 
 # --- 3. transcription-factor target scoring ---------------------------------
-tf_targets <- list(
-  Nfkb1 = c("Ccl2","Ccl5","Cxcl1","Cxcl2","Il6","Tnf","Icam1","Nfkbia","Ccl20","Cxcl10"),
-  Fos   = c("Fos","Fosb","Egr1","Junb","Dusp1","Dusp5","Dusp6","Nr4a1"),
-  Jun   = c("Jun","Junb","Jund","Fos","Fosb","Ccl2","Cd44","Vegfa","Timp1"),
-  Stat3 = c("Socs3","Il6","Ccl2","Ccl5","Mcl1","Bcl2l1","Cebpb","Il1b")
-)
-for (tf in names(tf_targets)) {
-  HSC <- AddModuleScore(HSC, features = tf_targets[tf],
-                        name = paste0(tf, "_Score"), ctrl = min(100, nrow(HSC)))
-  colnames(HSC@meta.data)[ncol(HSC@meta.data)] <- paste0(tf, "_Score")
+tf_file <- file.path(gene_dir, "tf_targets_mouse.csv")
+tf_targets <- NULL
+if (file.exists(tf_file)) {
+  tf_targets <- read_gene_sets(tf_file)
+  tf_targets <- lapply(tf_targets, function(x) intersect(unique(x), rownames(HSC)))
+  tf_targets <- tf_targets[lengths(tf_targets) >= 5L]
+  for (tf in names(tf_targets)) {
+    HSC <- AddModuleScore(HSC, features = tf_targets[tf],
+                          name = paste0(tf, "_Score"), ctrl = min(100, nrow(HSC)))
+    colnames(HSC@meta.data)[ncol(HSC@meta.data)] <- paste0(tf, "_Score")
+  }
+} else {
+  warning("Exact Figure 2F TF target file is absent; TF scoring was skipped. ",
+          "Add data/gene_sets/tf_targets_mouse.csv (set,gene) to reproduce it.")
 }
-# NOTE: TF target gene lists above are examples; the original script read
-#       tf_targets from a workspace object. Confirm the exact target lists if
-#       exact reproduction of Fig. 2F is required.
 
 # --- 4. Slingshot trajectory and GAM-smoothed trends ------------------------
 # Embedding from the HSC UMAP; start cluster set to "1" as in the original.
@@ -106,7 +128,7 @@ HSC$pseudotime <- sds@curves[[1]]$lambda[rownames(Embeddings(HSC, "umap"))]
 pseudo_df <- data.frame(
   pseudotime = HSC$pseudotime,
   cluster    = Idents(HSC),
-  Cd69       = GetAssayData(HSC, assay = "RNA", layer = "data")["Cd69", ],
+  Cd69       = get_assay_matrix(HSC, assay = "RNA", slot = "data")["Cd69", ],
   FetchData(HSC, vars = paste0(names(module_list), "_Score"))
 )
 p_dynamics <- pseudo_df %>%
@@ -121,8 +143,9 @@ ggsave(file.path(fig_dir, "Fig_Dynamics_Modules_Cd69.pdf"), p_dynamics,
        width = 7, height = 9)
 
 # --- 5. module correlation (Spearman) ---------------------------------------
-cor_data <- FetchData(HSC, vars = c(paste0(names(module_list), "_Score"),
-                                    paste0(names(tf_targets), "_Score")))
+score_vars <- paste0(names(module_list), "_Score")
+if (!is.null(tf_targets)) score_vars <- c(score_vars, paste0(names(tf_targets), "_Score"))
+cor_data <- FetchData(HSC, vars = score_vars)
 cor_mat <- cor(cor_data, method = "spearman")
 write.csv(cor_mat, file.path(output_dir, "HSC_module_correlation.csv"))
 
