@@ -3,17 +3,18 @@
 # Lists all R packages required by the analysis scripts and reports the
 # installed versions (adapted from the original analysis code).
 # Recommended: install with renv (renv::init(); renv::install(pkgs);
-# renv::snapshot()) to lock a reproducible environment. R >= 4.2 is required.
+# renv::snapshot()) to lock a reproducible environment. R >= 4.5 and
+# Bioconductor 3.21 are required for GSVA v2.2.0.
 # ============================================================================
 
 pkgs <- c(
   # core single-cell / spatial
-  "Seurat", "harmony", "spacexr", "CellChat", "slingshot", "mgcv",
+  "Seurat", "harmony", "spacexr", "slingshot", "mgcv", "RANN", "igraph",
   # data wrangling / plotting
   "tidyverse", "dplyr", "tidyr", "ggplot2", "patchwork", "ggpubr",
-  "cowplot", "stringr", "reshape2", "pheatmap", "viridis", "ggrepel",
+  "cowplot", "stringr", "pheatmap", "viridis", "ggrepel",
   # enrichment / pathway
-  "GSVA", "msigdbr", "clusterProfiler", "limma", "org.Mm.eg.db", "AnnotationDbi",
+  "GSVA", "msigdbr", "clusterProfiler", "DESeq2", "org.Mm.eg.db", "AnnotationDbi",
   # survival
   "survival", "survminer",
   # misc
@@ -36,7 +37,8 @@ write.csv(pkg_info, file.path("output", "package_versions.csv"), row.names = FAL
 #   - Cell Ranger v6.0.1 (10x Genomics)      : scRNA-seq preprocessing
 #   - BSTMatrix v1.0 (Biomarker Technologies): spatial transcriptomics upstream
 #     processing and read mapping (mouse reference genome mm10; version to confirm)
-#   - CellPhoneDB (version/database to confirm): ligand-receptor analysis
+#   - CellPhoneDB v5: exact installed version and database checksum are captured
+#     by scripts/08_run_cellphonedb.py
 #   - 10x Genomics Chromium Single Cell 3' v3 : library chemistry
 #   - Illumina NovaSeq 6000 (PE150)          : sequencing platform
 # ----------------------------------------------------------------------------
