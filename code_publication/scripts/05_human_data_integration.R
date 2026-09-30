@@ -39,14 +39,22 @@ sc_n <- NormalizeData(sc_filt)
 sc_n <- FindVariableFeatures(sc_n, selection.method = "vst", nfeatures = 2000)
 sc_n <- ScaleData(sc_n)
 sc_n <- RunPCA(sc_n, npcs = 50)
+sc_n <- RunUMAP(sc_n, dims = 1:30, reduction = "pca",
+                reduction.name = "umap_pca", reduction.key = "UMAPpca_")
+p_no_harmony <- DimPlot(sc_n, reduction = "umap_pca", group.by = "orig.ident") +
+  ggtitle("Human bone marrow before Harmony (condition-confounded samples)")
+ggsave(file.path(fig_dir, "sensitivity_human_BM_preHarmony.pdf"),
+       p_no_harmony, width = 7, height = 6)
 sce_har <- RunHarmony(sc_n, group.by.vars = "orig.ident")
 sce.har <- FindNeighbors(sce_har, dims = 1:30, reduction = "harmony")
 sce.har <- FindClusters(sce.har, resolution = 1.2, algorithm = 1)
 sce.harm <- RunUMAP(sce.har, dims = 1:30, reduction = "harmony")
 
 # --- 3. marker-based cell-type annotation -----------------------------------
-# Manual cluster->celltype mapping from the original analysis (clusters 0-19).
-celltype <- data.frame(ClusterID = 0:19, celltype = NA_character_)
+# Manual cluster->celltype mapping retained from the original analysis.
+observed_cluster_ids <- sort(unique(as.integer(as.character(sce.harm$seurat_clusters))))
+celltype <- data.frame(ClusterID = observed_cluster_ids,
+                       celltype = paste0("Unassigned_", observed_cluster_ids))
 celltype[celltype$ClusterID == 9, "celltype"] <- "HSC"
 celltype[celltype$ClusterID == 0, "celltype"] <- "MPP"
 celltype[celltype$ClusterID == 1, "celltype"] <- "CMP"
@@ -57,8 +65,9 @@ celltype[celltype$ClusterID == 5, "celltype"] <- "B"
 celltype[celltype$ClusterID == 6, "celltype"] <- "T"
 celltype[celltype$ClusterID == 7, "celltype"] <- "NK"
 celltype[celltype$ClusterID == 8, "celltype"] <- "Mono"
-# NOTE: clusters not listed above were left unassigned in the original code
-#       (10-19); confirm the complete mapping if all clusters require labels.
+# Clusters 10-19 were not assigned in the retained original code. They are
+# kept explicitly as Unassigned_<cluster> rather than converted to NA or
+# silently discarded. Their markers are exported for author review.
 
 sce.harm$celltype <- NA_character_
 for (i in seq_len(nrow(celltype))) {
@@ -68,17 +77,23 @@ for (i in seq_len(nrow(celltype))) {
 Idents(sce.harm) <- "celltype"
 saveRDS(sce.harm, file.path(output_dir, "human_bone_marrow.rds"))
 
+unassigned_cells <- rownames(sce.harm@meta.data)[grepl("^Unassigned_", sce.harm$celltype)]
+if (length(unassigned_cells)) {
+  unassigned <- subset(sce.harm, cells = unassigned_cells)
+  Idents(unassigned) <- "seurat_clusters"
+  unassigned_markers <- FindAllMarkers(unassigned, only.pos = TRUE,
+                                       logfc.threshold = 0.25, min.pct = 0.1)
+  write.csv(unassigned_markers,
+            file.path(output_dir, "human_unassigned_cluster_markers.csv"),
+            row.names = FALSE)
+}
+
 # --- 4. GSVA validation of annotations --------------------------------------
-genesets <- read.csv(file.path(gene_dir, "gsva_human_cluster.csv"), header = FALSE)
-genesets <- split(genesets$V2, genesets$V1)
-expr <- AverageExpression(sce.harm, assays = "RNA", layer = "data")[[1]]
+genesets <- read_gene_sets(file.path(gene_dir, "gsva_human_cluster.csv"))
+expr <- AverageExpression(sce.harm, assays = "RNA", slot = "data")[[1]]
 expr <- expr[rowSums(expr) > 0, ]
 expr <- as.matrix(expr)
-if (packageVersion("GSVA") >= "1.50.0") {
-  gsva.res <- gsva(gsvaParam(expr, genesets, kcdf = "Gaussian"), verbose = FALSE)
-} else {
-  gsva.res <- gsva(expr, genesets, method = "ssgsea")
-}
+gsva.res <- run_gsva(expr, genesets, kcdf = "Gaussian")
 write.csv(data.frame(Genesets = rownames(gsva.res), gsva.res, check.names = FALSE),
           file.path(output_dir, "gsva_res_human.csv"), row.names = FALSE)
 
