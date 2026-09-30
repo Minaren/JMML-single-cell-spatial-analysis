@@ -38,6 +38,7 @@ sc_merge <- merge(scRNAlist[[1]], scRNAlist[2:length(scRNAlist)])
 # Thresholds from the original analysis: 500-6,000 detected genes, <10% mt reads
 sc_filt <- subset(sc_merge,
                   subset = nFeature_RNA > 500 & nFeature_RNA < 6000 & percent.mt < 10)
+check_group_counts(sc_filt, "orig.ident", c(Kras = 7509L, WT = 7379L))
 
 # --- 3. normalization, variable features, scaling --------------------------
 sc_n <- NormalizeData(sc_filt)
@@ -47,6 +48,12 @@ sc_n <- ScaleData(sc_n)
 # --- 4. PCA, Harmony integration, clustering, UMAP -------------------------
 sc_n <- RunPCA(sc_n, npcs = 50, verbose = FALSE)
 pc.num <- 1:30
+sc_n <- RunUMAP(sc_n, dims = pc.num, reduction = "pca",
+                reduction.name = "umap_pca", reduction.key = "UMAPpca_")
+p_no_harmony <- DimPlot(sc_n, reduction = "umap_pca", group.by = "orig.ident") +
+  ggtitle("Mouse HSPCs before Harmony (genotype-confounded samples)")
+ggsave(file.path(fig_dir, "sensitivity_mouse_HSPC_preHarmony.pdf"),
+       p_no_harmony, width = 7, height = 6)
 sce_har <- RunHarmony(sc_n, group.by.vars = "orig.ident", project.dim = FALSE,
                       plot_convergence = FALSE)
 sce.har <- FindNeighbors(sce_har, dims = pc.num, reduction = "harmony")
@@ -54,9 +61,6 @@ sce.har <- FindClusters(sce.har, graph.name = "RNA_snn", resolution = 1.2, algor
 sce.harm <- RunUMAP(sce.har, dims = pc.num, reduction = "harmony")
 
 # --- 5. cluster markers -----------------------------------------------------
-# NOTE: meta column referenced for manual annotation below is RNA_snn_res.0.6;
-#       confirm the correspondence between the stored clustering column and
-#       the resolution 1.2 clustering used for the UMAP.
 allmarkers <- FindAllMarkers(sce.harm, logfc.threshold = 0.5, min.pct = 0.1, only.pos = TRUE)
 write.csv(allmarkers, file.path(output_dir, "allmarkers_celltype_mouse.csv"))
 
@@ -76,13 +80,22 @@ celltype[celltype$ClusterID %in% 19, "celltype"] <- "T"
 celltype[celltype$ClusterID %in% c(1,3,4), "celltype"] <- "GMP"
 celltype[celltype$ClusterID %in% 20, "celltype"] <- "MK"
 
+observed_clusters <- sort(unique(as.character(sce.harm$seurat_clusters)))
+missing_mapping <- setdiff(observed_clusters, as.character(celltype$ClusterID))
+if (length(missing_mapping)) {
+  stop("No cell-type mapping for resolution-1.2 cluster(s): ",
+       paste(missing_mapping, collapse = ", "))
+}
+
 sce.harm$celltype <- NA_character_
 for (i in seq_len(nrow(celltype))) {
-  sce.harm@meta.data[which(sce.harm@meta.data$RNA_snn_res.0.6 == celltype$ClusterID[i]),
+  sce.harm@meta.data[which(as.character(sce.harm@meta.data$seurat_clusters) ==
+                             as.character(celltype$ClusterID[i])),
                      "celltype"] <- celltype$celltype[i]
 }
-# NOTE: the original code referenced the meta column RNA_snn_res.0.6; if the
-#       object stores a different clustering column, adjust the column name.
+if (anyNA(sce.harm$celltype)) {
+  stop("At least one cell remained unannotated after applying the cluster map.")
+}
 
 celltype_order <- c("HSC","MPP","GMP","Erythroblast","Ery","Granulocyte",
                     "Macrophage","Monocyte","MK","B","T","cDC")
@@ -93,19 +106,12 @@ saveRDS(sce.harm, file.path(output_dir, "mouse_HSPC_annotated.rds"))
 
 # --- 7. GSVA pathway scoring (curated modules) ------------------------------
 # Module gene sets are provided as a two-column CSV (V1 = module, V2 = gene).
-genesets <- read.csv(file.path(gene_dir, "gsva_mouse_cluster.csv"), header = FALSE)
-genesets <- split(genesets$V2, genesets$V1)
+genesets <- read_gene_sets(file.path(gene_dir, "gsva_mouse_cluster.csv"))
 
-expr <- AverageExpression(sce.harm, assays = "RNA", layer = "data")[[1]]
+expr <- AverageExpression(sce.harm, assays = "RNA", slot = "data")[[1]]
 expr <- expr[rowSums(expr) > 0, ]
 expr <- as.matrix(expr)
-
-if (packageVersion("GSVA") >= "1.50.0") {
-  param <- gsvaParam(expr, genesets, kcdf = "Gaussian")
-  gsva.res <- gsva(param, verbose = FALSE)
-} else {
-  gsva.res <- gsva(expr, genesets, method = "ssgsea")
-}
+gsva.res <- run_gsva(expr, genesets, kcdf = "Gaussian")
 write.csv(data.frame(Genesets = rownames(gsva.res), gsva.res, check.names = FALSE),
           file.path(output_dir, "gsva_res_mouse.csv"), row.names = FALSE)
 
