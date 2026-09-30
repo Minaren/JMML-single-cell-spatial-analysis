@@ -22,7 +22,10 @@ code_publication/
 │   ├── 05_human_data_integration.R             # human JMML + normal BM integration
 │   ├── 06_human_HSC_survival_analysis.R        # CD69high HSC signature + survival
 │   ├── 07_spatial_transcriptomics_analysis.R   # RCTD deconvolution + HSC niche
-│   └── 08_cell_cell_communication.R            # CellPhoneDB/CellChat visualisation
+│   ├── 08_prepare_cellphonedb_inputs.py         # orthologue conversion + sparse h5ad
+│   ├── 08_run_cellphonedb.py                    # versioned CellPhoneDB v5 run
+│   ├── 08_cell_cell_communication.R             # CellPhoneDB visualisation
+│   └── 09_NB4_bulk_RNAseq.R                     # GSE313879 NB4 DESeq2 analysis
 ├── data/          # input data (see data/README.md; raw data not included)
 ├── output/        # analysis outputs (written by scripts)
 ├── figures/       # figures (written by scripts)
@@ -31,18 +34,19 @@ code_publication/
 
 ## Environment
 
-- R >= 4.2 (the exact analysis-time R version was not retained)
-- Key R packages: Seurat (v4.3.0 used in the study; the code is compatible with
-  Seurat v5 when `JoinLayers()` is called before layer access),
-  harmony, spacexr (RCTD), CellChat (v1.6.1), GSVA (v2.2.0), slingshot, mgcv,
-  clusterProfiler, limma, org.Mm.eg.db, survival, survminer
+- R >= 4.5 (Bioconductor 3.21, containing GSVA v2.2.0;
+  the exact analysis-time patch version was not retained)
+- Key R packages: Seurat v4.3.0 (this release deliberately stops on Seurat v5
+  rather than mixing v4 slots with v5 assay layers),
+  harmony, spacexr (RCTD), GSVA (v2.2.0), slingshot, mgcv, igraph,
+  clusterProfiler, DESeq2, org.Mm.eg.db, RANN, survival, survminer
 - External software:
   - Cell Ranger v6.0.1 (10x Genomics) for scRNA-seq preprocessing
   - BSTMatrix v1.0 (Biomarker Technologies) for spatial transcriptomic upstream
     processing (reads mapped to the mouse reference genome mm10; exact build to
     be confirmed)
-  - CellPhoneDB (exact version/database used by the original analysis to be confirmed)
-    for ligand-receptor analysis
+  - CellPhoneDB v5 for the corrected rerun; the runner records the exact
+    package version and database checksum. The original run's version was not retained.
 - See environment/packages.R for the full package list. To lock a reproducible
   environment with renv: `renv::init()`, install the packages, then
   `renv::snapshot()`.
@@ -55,6 +59,7 @@ working directory). Each script sources `scripts/00_setup.R`.
 
 ```
 # from the package root:
+Rscript environment/validate_versions.R
 Rscript scripts/01_mouse_HSPC_processing.R
 Rscript scripts/02_mouse_annotation_crossvalidation.R   # optional
 Rscript scripts/03_mouse_HSC_subclustering.R
@@ -62,8 +67,10 @@ Rscript scripts/04_mouse_Tcell_analysis.R
 Rscript scripts/05_human_data_integration.R
 Rscript scripts/06_human_HSC_survival_analysis.R
 Rscript scripts/07_spatial_transcriptomics_analysis.R
-# 08 requires CellPhoneDB outputs (see below), then:
+python scripts/08_prepare_cellphonedb_inputs.py
+python scripts/08_run_cellphonedb.py --database /path/to/versioned/cellphonedb.zip
 Rscript scripts/08_cell_cell_communication.R
+Rscript scripts/09_NB4_bulk_RNAseq.R              # independent bulk analysis
 ```
 
 ### Required input data
@@ -77,31 +84,37 @@ Rscript scripts/08_cell_cell_communication.R
    data/raw/human_JMML/ and data/raw/human_PB/
 4. Healthy mouse BM reference GSE122465 (notlabel.RDS + metaInfo.txt) ->
    data/reference/GSE122465/
-5. Spatial transcriptomic data (BMKMANU S1000, Biomarker Technologies; not
-   public) -> data/spatial/ST_WT/, data/spatial/ST_Kras/
+5. Spatial transcriptomic data (BMKMANU S1000, Biomarker Technologies;
+   GSE313878) -> data/spatial/ST_WT/, data/spatial/ST_Kras/
 6. Bulk RNA-seq + clinical data GSE71449 (ids_exprs.csv, Table_S1.xlsx) ->
    data/bulk/GSE71449/
+7. NB4 processed count matrix GSE313879 plus an explicit two-column
+   `sample_metadata.tsv` (`sample_id`, `condition`) -> data/bulk/GSE313879/
 
 See data/README.md for details, accessions and the BMK output format.
 
 ### Cell-cell communication (CellPhoneDB)
 
-CellPhoneDB is a Python tool and is run separately on the RCTD-annotated
-spatial spots. After script 07, generate the CellPhoneDB inputs from
-output/spatial/ST_<sample>/Spatial_CellType.tsv and the spot count matrix, then
-run:
+CellPhoneDB uses human ligand-receptor identifiers. After script 07, provide
+`data/reference/mouse_to_human_orthologues.tsv` with columns `mouse_symbol` and
+`human_symbol`, together with a README recording the mapping resource, version
+and download date. Script 08_prepare_cellphonedb_inputs.py excludes ambiguous
+one-mouse-to-many-human mappings, sums many-mouse-to-one-human counts, and
+writes sparse h5ad plus metadata. The versioned runner then supplies metadata
+first and counts second through the official CellPhoneDB v5 Python API:
 
 ```
-cellphonedb method statistical_analysis \
-  counts_<sample>.txt meta_<sample>.txt \
-  --counts-data gene_name --threshold 0.1 --iterations 1000 \
-  --output-path output/cellphonedb/ST_<sample>
+python scripts/08_run_cellphonedb.py \
+  --database /path/to/versioned/cellphonedb.zip \
+  --iterations 1000 --threshold 0.1 --p-cutoff 0.05 --seed 220625
 ```
 
 Place the resulting count_network.txt, pvalues.txt, means.txt and
 significant_means.txt files into output/cellphonedb/ST_WT/ and
 output/cellphonedb/ST_Kras/, then run script 08 to reproduce the network
 circle plots and the HSC-centred dot plots (significance threshold P < 0.05).
+The runner also writes `cellphonedb_run_metadata.json`, containing package
+versions and SHA-256 checksums of the database and analysis inputs.
 
 ## Key parameters
 
@@ -116,7 +129,8 @@ circle plots and the HSC-centred dot plots (significance threshold P < 0.05).
 | Clustering (HSC) | resolution / dims | 0.8 / 1:50 (mouse PCA), 1:30 (human) |
 | Marker detection | log2FC / min.pct | 0.5 / 0.1 (mouse); 0.25 / 0.1 (human HSC) |
 | Treg DE | log2FC / FDR | 0.25 / < 0.05 |
-| GSVA | kcdf | Poisson (counts), Gaussian (ssGSEA of bulk) |
+| GSVA | algorithm / input | `gsvaParam()` / average log-normalized expression |
+| Survival signature | algorithm | `ssgseaParam()` followed by `gsva()` |
 | Trajectory | tool / start cluster | Slingshot / "1" |
 | RCTD | CELL_MIN_INSTANCE / cores / doublet | 20 / 8 / "doublet" |
 | HSC niche | neighbourhood radius | 100 coordinate units |
@@ -131,32 +145,33 @@ Two annotation approaches were used in the original analysis:
 2. label transfer from the GSE122465 healthy bone-marrow reference
    (cross-validation; script 02).
 
-The manuscript reports the marker-based annotation. Note that the mouse
-annotation code referenced the meta column RNA_snn_res.0.6 while clustering was
-performed at resolution 1.2; confirm the correspondence if re-running.
+The manuscript reports the marker-based annotation. Mouse annotation is now
+applied to the active `seurat_clusters` generated at resolution 1.2. Human
+clusters without a retained original mapping are preserved as
+`Unassigned_<cluster>` and their markers are exported for author review.
 
 ## Notes and uncertainties
 
 - The mouse T-cell data were generated from three mice pooled per genotype
   (one 10x library per genotype); the Kras-vs-WT comparison is therefore based
   on one library per genotype and should be treated as exploratory.
-- The original human HSC GSVA block referenced workspace variables
-  (HSC_counts_filtered, mouse GO:BP sets, CD69_status) that were not defined in
-  the shared scripts; script 06 rebuilds them deterministically and uses human
-  MSigDB GO:BP sets. Please confirm this matches the analysis as performed.
+- Human HSC and mouse Treg pathway comparisons are descriptive because the
+  retained datasets do not provide independent library-level replication for
+  these cell-level contrasts.
 - Spatial data are BMKMANU S1000 output and are publicly deposited under
   GSE313878; the experimental protocol is described
   in the Biomarker Technologies methods document (BMKMANU S1000 Spatial
   transcriptomics Materials and method) and summarised in data/README.md.
-- Uncertain parameters (CellPhoneDB version/database, CellChat exact settings,
-  BSTMatrix reference build, Monocle 2 usage, pI-pC administration in the
-  transplantation model) are marked with [UNCERTAIN] in the scripts and listed
-  in CHANGES.md.
+- CellPhoneDB software/database version, orthologue mapping resource, exact
+  BSTMatrix mm10 reference build, the complete human cluster map and the exact
+  Figure 2F TF target list remain author-supplied provenance items. The scripts
+  stop or skip the affected step rather than silently inventing these values.
 
 ## Reproducibility record
 
 Run `Rscript environment/capture_session_info.R` after installing the required
-packages. The release is identified by the `v1.0.0` tag and `VERSION` file.
+packages. The DOI-linked `v1.0.0` remains immutable; these corrections are
+prepared for a later `v1.1.0` release after numerical validation.
 
 ## Outputs
 

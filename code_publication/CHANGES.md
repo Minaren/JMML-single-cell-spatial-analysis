@@ -1,5 +1,28 @@
 # CHANGES.md
 
+## v1.1.0 development corrections (2026-10-01)
+
+- Corrected GSVA v2.2.0 calls and used `ssgseaParam()` for the GSE71449
+  survival signature.
+- Removed Seurat v5-only layer operations from the Seurat v4.3.0 code.
+- Corrected active-cluster annotation, HSC subclustering order and direct
+  CD69-high versus CD69-low marker construction.
+- Separated Table S6 univariable Cox models from the Figure 8H multivariable
+  model and added proportional-hazards diagnostics.
+- Replaced pooled-library cell-level pathway inference with descriptive scores.
+- Added sparse, aligned BMKMANU S1000 handling and memory-safe HSC-neighbour
+  search.
+- Added explicit mouse-human orthologue input preparation for CellPhoneDB and
+  corrected its input order and plotting parser.
+- Removed the non-executable CellChat placeholder; the retained communication
+  workflow now makes only the CellPhoneDB analysis it can reproduce.
+- Added checks for expected cell counts, missing mappings, corrupt gene symbols
+  and insufficient signature overlap.
+- Corrected the public status and manufacturer depth wording for GSE313878.
+
+See the repository-level `RELEASE_NOTES_v1.1.0-draft.md` for validation items
+that must be resolved before this development version is released.
+
 ## v1.0.0 release preparation (2026-08-31)
 
 - Added version, citation, Zenodo, release-note and validation metadata.
@@ -77,7 +100,10 @@ modified.
   was run at resolution 1.2; the discrepancy is flagged in script 01.
   [UNCERTAIN]
 
-## Items awaiting author confirmation
+## Items that were awaiting author confirmation in v1.0.0 (historical)
+
+The current disposition of these items is recorded in the v1.1.0 draft release
+notes and CODE_VALIDATION.md.
 
 1. CellPhoneDB version and database used for the spatial analysis.
 2. CellChat parameters (nboot, type) used in the original run.
