@@ -9,6 +9,10 @@
 # Notebooks (rendered)
 *.ipynb_checkpoints/
 
+# Python
+__pycache__/
+*.py[cod]
+
 # Large binaries / generated reports / data files
 *.zip
 *.pdf
@@ -17,6 +21,22 @@
 *.docx
 *.xlsx
 *.html
+
+# Generated analysis products (retain the directory guides)
+/code_publication/output/*
+!/code_publication/output/README.md
+/code_publication/figures/*
+!/code_publication/figures/README.md
+
+# Downloaded or generated study inputs (see data/README.md)
+/code_publication/data/raw/
+/code_publication/data/spatial/ST_WT/
+/code_publication/data/spatial/ST_Kras/
+/code_publication/data/spatial/sc_meta.txt
+/code_publication/data/spatial/ref_cell_anno
+/code_publication/data/reference/GSE122465/
+/code_publication/data/bulk/GSE71449/
+/code_publication/data/bulk/GSE313879/
 
 # OS
 Thumbs.db

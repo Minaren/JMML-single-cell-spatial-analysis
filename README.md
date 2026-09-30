@@ -9,16 +9,19 @@ and BMKMANU S1000 spatial transcriptomic analysis (deconvolution, HSC niche,
 cell-cell communication).
 
 The maintained and documented analysis package is in `code_publication/`.
-See `code_publication/README.md` for the script list (00-08), inputs, outputs,
+See `code_publication/README.md` for the script list (00-09), inputs, outputs,
 and run instructions. Raw sequencing data are not included in this repository;
 public data accessions are listed in `code_publication/data/README.md`.
 
 ## Release
 
-This repository is prepared as software release `v1.0.0`. See
-`RELEASE_NOTES.md`, `CODE_VALIDATION.md`, and `CITATION.cff`. The archived
-software version is available from Zenodo at
+The DOI-linked software release `v1.0.0` remains available from Zenodo at
 <https://doi.org/10.5281/zenodo.22207699>.
+
+The current main branch contains an audited `v1.1.0-dev` correction set. It
+must be numerically rerun against the deposited inputs before being tagged as
+`v1.1.0`; it does not replace or rewrite the archived v1.0.0 DOI record. See
+`RELEASE_NOTES_v1.1.0-draft.md` and `CODE_VALIDATION.md`.
 
 Suggested citation:
 
@@ -28,12 +31,12 @@ Suggested citation:
 
 ## Environment
 
-- R >= 4.2 (the exact analysis-time R version was not retained)
-- Key R packages: Seurat (v4.3.0), harmony, spacexr (RCTD), CellChat (v1.6.1), GSVA
-  (v2.2.0), slingshot, mgcv, clusterProfiler, limma, org.Mm.eg.db, survival,
+- R >= 4.5 with Bioconductor 3.21 (the exact patch version was not retained)
+- Key R packages: Seurat (v4.3.0), harmony, spacexr (RCTD), GSVA
+  (v2.2.0), slingshot, mgcv, clusterProfiler, DESeq2, org.Mm.eg.db, survival,
   survminer
 - External: Cell Ranger v6.0.1; BSTMatrix v1.0 (Biomarker Technologies);
-  CellPhoneDB (exact analysis-time version/database not retained)
+  CellPhoneDB (the rerun must record the software and database versions)
 
 ## License
 
