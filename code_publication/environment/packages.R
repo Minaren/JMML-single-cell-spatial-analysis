@@ -34,7 +34,9 @@ write.csv(pkg_info, file.path("output", "package_versions.csv"), row.names = FAL
 
 # ----------------------------------------------------------------------------
 # External software used outside R (not covered by renv):
-#   - Cell Ranger v6.0.1 (10x Genomics)      : scRNA-seq preprocessing
+#   - Cell Ranger v7.0.0 (10x Genomics)      : scRNA-seq preprocessing
+#   - FASTQ demultiplexing tool/version      : unresolved; the author-supplied
+#     "bcl2fastq 5.0.1" does not match Illumina's bcl2fastq2 release series
 #   - BSTMatrix v1.0 (Biomarker Technologies): spatial transcriptomics upstream
 #     processing and read mapping (mouse reference genome mm10; version to confirm)
 #   - CellPhoneDB v5: exact installed version and database checksum are captured

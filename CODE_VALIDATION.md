@@ -13,6 +13,11 @@
   exported.
 - Spatial counts remain sparse; count columns and coordinate rows are
   intersected and reordered explicitly; sample output directories are created.
+- Author-supplied WT/Kras spatial matrices, coordinates, read tables and H&E
+  TIFFs pass the dedicated input validator; dimensions and SHA-256 checksums
+  are recorded in `code_publication/data/spatial/INPUT_PROVENANCE.md`.
+- Script 07 now builds the RCTD reference from script 01's annotated Seurat
+  object rather than unversioned dense `sc_meta.txt/ref_cell_anno` exports.
 - CellPhoneDB inputs are prepared only after an explicit mouse-human mapping;
   metadata precede counts in the documented command, and human-symbol h5ad is
   used for the high-density spatial data.
@@ -42,9 +47,11 @@ until those checks pass.
 ## Inputs/provenance still required
 
 1. Resolve the GSE313553 Cell Ranger version conflict: GEO states v2.1.1,
-   whereas the manuscript/code state v6.0.1.
-2. Correct the GSE313878 WT platform typo (`BMKMANU S1001`) and provide the
-   coordinate/image and RCTD reference inputs absent from GEO.
-3. Retain the BSTMatrix v1.0 run record and exact mm10 annotation release.
-4. Run the full R/Python workflow against the deposited inputs and compare the
+   whereas the author confirmed v7.0.0.
+2. Resolve the demultiplexing software record: supplied `bcl2fastq 5.0.1` does
+   not correspond to an official Illumina bcl2fastq2 release.
+3. Correct the GSE313878 WT platform typo (`BMKMANU S1001`) and add the supplied
+   coordinate and H&E files to GEO.
+4. Retain the BSTMatrix v1.0 run record and exact mm10 annotation release.
+5. Run the full R/Python workflow against the deposited inputs and compare the
    numerical outputs with every manuscript panel and supplementary table.

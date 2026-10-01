@@ -8,13 +8,10 @@
 #          (BMKMANU S1000 output: matrix.mtx.gz, barcodes.tsv.gz,
 #          features.tsv.gz, barcodes_pos.tsv.gz, barcodes_read.tsv.gz;
 #          see data/README.md for the format note)
-#          data/spatial/sc_meta.txt      (single-cell reference counts,
-#                                         genes x cells)
-#          data/spatial/ref_cell_anno    (single-cell reference annotation,
-#                                         barcode <TAB> cell_type)
+#          output/mouse_HSPC_annotated.rds (script 01 output; RCTD reference)
 # Outputs: output/spatial/ST_WT/ and output/spatial/ST_Kras/
 #          (RCTD.rds, Spatial_CellType.tsv, HSC_neighbor_cell_proportion.tsv)
-# Run order: after 00_setup.R; single-cell reference prepared by scripts 01-03
+# Run order: after script 01 (which prepares the annotated single-cell reference)
 # NOTE 1: Spatial experiment was performed by Biomarker Technologies (BMKMANU
 #         S1000); the deposited study data are available under GSE313878.
 # NOTE 2: The reference cell-type annotation used for RCTD must contain the
@@ -29,32 +26,43 @@ suppressPackageStartupMessages(library(RANN))      # memory-safe nearest-neighbo
 spatial_out <- file.path(output_dir, "spatial")
 dir.create(spatial_out, showWarnings = FALSE, recursive = TRUE)
 
-scmeta      <- file.path(spatial_dir, "sc_meta.txt")
-anno        <- file.path(spatial_dir, "ref_cell_anno")
+reference_rds <- file.path(output_dir, "mouse_HSPC_annotated.rds")
 min_cells   <- 5
 min_features<- 100
 HSC_name    <- "HSC"
 radius      <- 100    # HSC neighborhood radius (coordinate units)
 
 # --- 1. RCTD reference -------------------------------------------------------
-require_files(c(scmeta, anno))
-sc_counts <- read.table(scmeta, header = TRUE, row.names = 1, check.names = FALSE)
-sc_counts <- as.matrix(sc_counts)
-storage.mode(sc_counts) <- "numeric"
-if (anyNA(sc_counts) || any(sc_counts < 0)) {
+# Rebuild the reference directly from the versioned script-01 output. This
+# avoids the historical unversioned dense exports sc_meta.txt/ref_cell_anno and
+# guarantees that the RCTD labels match the released annotation workflow.
+require_files(reference_rds)
+reference_object <- readRDS(reference_rds)
+if (!inherits(reference_object, "Seurat")) {
+  stop("mouse_HSPC_annotated.rds is not a Seurat object.")
+}
+if (!"celltype" %in% colnames(reference_object@meta.data)) {
+  stop("mouse_HSPC_annotated.rds does not contain the required celltype column.")
+}
+cell_type_by_cell <- setNames(as.character(reference_object$celltype),
+                              colnames(reference_object))
+if (anyNA(cell_type_by_cell) || any(!nzchar(cell_type_by_cell))) {
+  stop("The single-cell reference contains missing or empty cell-type labels.")
+}
+type_counts <- table(cell_type_by_cell)
+retained_types <- names(type_counts[type_counts > 25])
+keep_cells <- names(cell_type_by_cell)[cell_type_by_cell %in% retained_types]
+if (!length(keep_cells) || !HSC_name %in% retained_types) {
+  stop("RCTD reference filtering removed every cell or the HSC reference type.")
+}
+sc_counts <- get_assay_matrix(reference_object, assay = "RNA", slot = "counts")
+sc_counts <- sc_counts[, keep_cells, drop = FALSE]
+if (anyNA(sc_counts@x) || any(sc_counts@x < 0)) {
   stop("Single-cell RCTD reference contains missing or negative counts.")
 }
-sc_nUMI   <- colSums(sc_counts)
-cellType  <- read.table(anno, header = FALSE, sep = "\t", check.names = FALSE)
-colnames(cellType) <- c("barcode", "cell_type")
-cellType$cell_type <- as.factor(cellType$cell_type)
-cellType <- cellType[cellType$cell_type %in%
-                       names(table(cellType$cell_type)[table(cellType$cell_type) > 25]), ]
-cell_types <- setNames(as.character(cellType$cell_type), cellType$barcode)
-cell_types <- as.factor(cell_types)
-sc_counts <- sc_counts[, colnames(sc_counts) %in% names(cell_types)]
-cell_types <- cell_types[colnames(sc_counts)]
-sc_nUMI   <- sc_nUMI[colnames(sc_counts)]
+cell_types <- factor(cell_type_by_cell[keep_cells])
+names(cell_types) <- keep_cells
+sc_nUMI <- Matrix::colSums(sc_counts)
 if (!identical(colnames(sc_counts), names(cell_types)) ||
     !identical(colnames(sc_counts), names(sc_nUMI))) {
   stop("Single-cell reference counts, annotations and nUMI are not aligned.")

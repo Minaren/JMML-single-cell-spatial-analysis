@@ -25,6 +25,11 @@
   sets and documented every repair.
 - Made the GSE71449 event rule explicit: a non-empty Table S1 `Cause of death`
   value is an overall-survival event; blank values are censored.
+- Updated the author-confirmed preprocessing version to Cell Ranger v7.0.0 and
+  retained the conflicting GEO v2.1.1 entry as a release-gate item.
+- Replaced unversioned dense RCTD reference exports with the annotated Seurat
+  object produced by script 01, and added author-supplied spatial file
+  checksums and an input-integrity validator.
 
 See the repository-level `RELEASE_NOTES_v1.1.0-draft.md` for validation items
 that must be resolved before this development version is released.

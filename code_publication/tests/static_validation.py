@@ -52,6 +52,7 @@ def validate_r_sources() -> None:
     survival = read(PACKAGE / "scripts" / "06_human_HSC_survival_analysis.R")
     human = read(PACKAGE / "scripts" / "05_human_data_integration.R")
     mouse_hsc = read(PACKAGE / "scripts" / "03_mouse_HSC_subclustering.R")
+    spatial = read(PACKAGE / "scripts" / "07_spatial_transcriptomics_analysis.R")
 
     require("GSVA::ssgseaParam" in setup and "GSVA::gsva(param" in setup,
             "The GSVA 2.2.0 ssGSEA parameter-object API is not present")
@@ -71,6 +72,11 @@ def validate_r_sources() -> None:
                 f"Restored {tf} target module is missing")
     require("tf_targets_mouse.csv" not in mouse_hsc,
             "Script 03 still depends on the incorrectly reported missing TF file")
+    require("mouse_HSPC_annotated.rds" in spatial,
+            "Script 07 does not use the versioned script-01 RCTD reference")
+    require('file.path(spatial_dir, "sc_meta.txt")' not in spatial and
+            'file.path(spatial_dir, "ref_cell_anno")' not in spatial,
+            "Script 07 still depends on unversioned dense RCTD exports")
 
     for path in sorted((PACKAGE / "scripts").glob("*.R")):
         source = read(path)
@@ -85,7 +91,9 @@ def validate_r_sources() -> None:
 
 
 def validate_python_sources() -> None:
-    for path in sorted((PACKAGE / "scripts").glob("*.py")):
+    python_paths = list((PACKAGE / "scripts").glob("*.py"))
+    python_paths += list((PACKAGE / "tests").glob("*.py"))
+    for path in sorted(python_paths):
         py_compile.compile(str(path), doraise=True)
     requirements = read(PACKAGE / "environment" / "requirements-cellphonedb.txt")
     lock = read(PACKAGE / "environment" / "requirements-cellphonedb-lock.txt")
@@ -96,6 +104,9 @@ def validate_python_sources() -> None:
                 f"Required Python dependency is not pinned consistently: {pin}")
     require('versions["cellphonedb"] != "5.0.1"' in runner,
             "The CellPhoneDB runner does not enforce 5.0.1")
+    versions = read(PACKAGE / "environment" / "software_versions.tsv")
+    require("Cell Ranger\t7.0.0" in versions,
+            "Cell Ranger is not recorded as the author-confirmed v7.0.0")
 
 
 def file_sha256(path: Path) -> str:

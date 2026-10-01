@@ -41,8 +41,8 @@ code_publication/
   harmony, spacexr (RCTD), GSVA (v2.2.0), slingshot, mgcv, igraph,
   clusterProfiler, DESeq2, org.Mm.eg.db, RANN, survival, survminer
 - External software:
-  - Cell Ranger v6.0.1 (10x Genomics) for scRNA-seq preprocessing, as recorded
-    by the manuscript/authors. GSE313553 currently reports v2.1.1; this
+  - Cell Ranger v7.0.0 (10x Genomics) for scRNA-seq preprocessing, as confirmed
+    by the author. GSE313553 currently reports v2.1.1; this
     external metadata conflict is a release blocker documented below.
   - BSTMatrix v1.0 (Biomarker Technologies) for spatial transcriptomic upstream
     processing (reads mapped to the mouse reference genome mm10; exact build to
@@ -99,7 +99,9 @@ python code_publication/tests/test_prepare_cellphonedb_inputs.py
 4. Healthy mouse BM reference GSE122465 (notlabel.RDS + metaInfo.txt) ->
    data/reference/GSE122465/
 5. Spatial transcriptomic data (BMKMANU S1000, Biomarker Technologies;
-   GSE313878) -> data/spatial/ST_WT/, data/spatial/ST_Kras/
+   GSE313878) -> data/spatial/ST_WT/, data/spatial/ST_Kras/. Script 07 builds
+   its RCTD reference directly from script 01's
+   `output/mouse_HSPC_annotated.rds`.
 6. Bulk RNA-seq + clinical data GSE71449 (ids_exprs.csv, Table_S1.xlsx) ->
    data/bulk/GSE71449/
 7. NB4 processed count matrix GSE313879 plus the included GEO-verified
@@ -190,6 +192,11 @@ falls outside that map.
 Run `Rscript environment/capture_session_info.R` after installing the required
 packages. The DOI-linked `v1.0.0` remains immutable; these corrections are
 prepared for a later `v1.1.0` release after numerical validation.
+
+For locally supplied BMKMANU inputs, run
+`python tests/validate_spatial_inputs.py`; the author-supplied file checksums
+used for the v1.1.0 rerun are recorded in
+`data/spatial/INPUT_PROVENANCE.md`.
 
 ## Outputs
 

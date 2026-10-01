@@ -38,6 +38,9 @@ validation and the GitHub/Zenodo release are complete.
   mouse-human orthologue map with checksums.
 - Added a fully pinned CellPhoneDB v5.0.1 Python lock file and an automated
   sparse orthologue-conversion/h5ad regression test.
+- Replaced the unversioned dense RCTD reference exports with the annotated
+  script-01 Seurat object and added validation/checksums for author-supplied
+  BMKMANU coordinates and H&E images.
 
 ## Documentation corrections
 
@@ -50,10 +53,12 @@ validation and the GitHub/Zenodo release are complete.
 
 ## Validation still required before release
 
-- Correct or explain the Cell Ranger conflict (GEO: v2.1.1; manuscript/code:
-  v6.0.1) in GSE313553.
-- Correct the `BMKMANU S1001` typo in the WT GSE313878 sample record and supply
-  the spatial coordinates/images and RCTD reference files absent from GEO.
+- Correct or explain the Cell Ranger conflict (GEO: v2.1.1; author-confirmed:
+  v7.0.0) in GSE313553.
+- Confirm the FASTQ demultiplexing software from the original run record;
+  `bcl2fastq 5.0.1` is not an official Illumina bcl2fastq2 release.
+- Correct the `BMKMANU S1001` typo in the WT GSE313878 sample record and add
+  the supplied spatial coordinates/images to GEO.
 - Retain the BSTMatrix v1.0 pipeline log/vendor report; GEO confirms mm10 but
   does not state the exact annotation release.
 - Run all scripts in the locked R/Python environment and compare numerical

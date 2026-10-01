@@ -15,10 +15,16 @@ Confirmed from the public family SOFT record:
 
 Unresolved conflict:
 
-- GEO states Cell Ranger v2.1.1, whereas the manuscript and maintained code
-  record Cell Ranger v6.0.1. The repository retains v6.0.1 because that is the
-  author-confirmed analysis version, but the GEO record must be corrected or
-  the actual pipeline log must establish which version was used.
+- GEO states Cell Ranger v2.1.1, whereas the author confirmed Cell Ranger
+  v7.0.0 on 2026-10-01. The repository records v7.0.0, but the GEO record must
+  be corrected or the actual pipeline log must establish which version was
+  used.
+
+Additional unresolved demultiplexing record:
+
+- the author supplied `bcl2fastq 5.0.1`; no such release appears in Illumina's
+  official bcl2fastq2 version series. The original run log is required before
+  this version is reported in the manuscript or release metadata.
 
 ## GSE313878: BMKMANU spatial transcriptomics
 
@@ -37,9 +43,11 @@ Issues requiring correction or supplementation:
   description, the Kras sample and the manufacturer protocol; this appears to
   be a GEO metadata typo and should be corrected to `BMKMANU S1000`;
 - the GEO supplement contains only barcodes, features and count matrices. The
-  coordinate files (`barcodes_pos.tsv.gz`), images and the single-cell RCTD
-  reference/annotation needed by script 07 are not present. They must be added
-  to GEO or supplied with the numerical-validation bundle;
+  author supplied the coordinate files and H&E images on 2026-10-01; their
+  dimensions and checksums are recorded in `spatial/INPUT_PROVENANCE.md`.
+  These supporting files should still be added to GEO. Script 07 now derives
+  its RCTD reference from the versioned script-01 output rather than separate
+  unversioned reference exports;
 - GEO records BSTMatrix and mm10 but not a BSTMatrix version or annotation
   release. The manuscript records BSTMatrix v1.0; retain the vendor run report
   or pipeline log as supporting provenance.
@@ -66,3 +74,5 @@ SHA-256 `8da6edc29b1c579b3306fc581883ad10b88924f2b51e12b1e801da33e89f2a65`.
 - <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE313553>
 - <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE313878>
 - <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE313879>
+- <https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-release-notes>
+- <https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html>
