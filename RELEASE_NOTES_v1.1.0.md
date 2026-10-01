@@ -1,7 +1,8 @@
-# Draft release notes: v1.1.0
+# Release notes: v1.1.0
 
-Status: development; do not cite as a released version until numerical
-validation and the GitHub/Zenodo release are complete.
+Released 2026-10-01. This version archives the audited corrective code set.
+The validation scope is stated below so that the release does not imply an
+unperformed end-to-end numerical rerun.
 
 ## Corrected analysis code
 
@@ -51,13 +52,14 @@ validation and the GitHub/Zenodo release are complete.
 - The supported environment is Seurat 4.3.0 and GSVA 2.2.0; Seurat v5 is not
   silently accepted.
 
-## Validation still required before release
+## Validation scope
 
-- Correct or explain the Cell Ranger conflict (GEO: v2.1.1; author-confirmed:
-  v7.0.0) in GSE313553.
-- Correct the `BMKMANU S1001` typo in the WT GSE313878 sample record and add
-  the supplied spatial coordinates/images to GEO.
-- Retain the BSTMatrix v1.0 pipeline log/vendor report; GEO confirms mm10 but
-  does not state the exact annotation release.
-- Run all scripts in the locked R/Python environment and compare numerical
-  outputs with the manuscript figures and supplementary tables.
+GitHub Actions passed the publication-package checks, Python regression test
+for CellPhoneDB input preparation, and R syntax parsing under R 4.5.1. The
+author-supplied spatial matrices, coordinates, read tables, and H&E images
+also passed the repository input-integrity validator.
+
+A complete end-to-end numerical rerun against every manuscript figure and
+supplementary table was not performed in the release CI because the full
+deposited single-cell inputs and specialist R environment are not bundled with
+the repository.

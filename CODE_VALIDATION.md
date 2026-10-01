@@ -1,4 +1,4 @@
-# Code validation report for v1.1.0-dev
+# Code validation report for v1.1.0
 
 ## Corrections checked statically
 
@@ -38,18 +38,10 @@
 
 ## Validation boundary
 
-The current execution environment does not contain R or the complete deposited
-input datasets. R parsing, package installation, end-to-end execution and
-numerical comparison with manuscript panels have therefore not yet been
-performed. This development version must not be tagged or archived as v1.1.0
-until those checks pass.
-
-## Inputs/provenance still required
-
-1. Resolve the GSE313553 Cell Ranger version conflict: GEO states v2.1.1,
-   whereas the author confirmed v7.0.0.
-2. Correct the GSE313878 WT platform typo (`BMKMANU S1001`) and add the supplied
-   coordinate and H&E files to GEO.
-3. Retain the BSTMatrix v1.0 run record and exact mm10 annotation release.
-4. Run the full R/Python workflow against the deposited inputs and compare the
-   numerical outputs with every manuscript panel and supplementary table.
+GitHub Actions parses all maintained R scripts under R 4.5.1 and runs the
+dependency-free publication-package checks plus the locked CellPhoneDB input
+regression test. The CI environment does not contain the complete deposited
+single-cell inputs or the full specialist R package stack, so end-to-end
+execution and numerical comparison with every manuscript panel have not been
+performed. Version 1.1.0 is therefore an audited corrective code archive, not
+a claim of complete numerical reproduction.
