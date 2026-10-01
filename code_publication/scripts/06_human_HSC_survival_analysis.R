@@ -125,7 +125,7 @@ hsc_high_score <- gsva_res["HSC_CD69high", ]
 clinical <- readxl::read_excel(clinical_file)
 required_clinical <- c("ID", "Survival from diagnosis\r\n(days)",
                        "age at diagnosis\r\n(years)",
-                       "Karyotype", "Mutation")
+                       "Karyotype", "Mutation", "Cause of death")
 missing_clinical <- setdiff(required_clinical, names(clinical))
 if (length(missing_clinical)) {
   stop("Missing required GSE71449 clinical column(s): ",
@@ -133,27 +133,13 @@ if (length(missing_clinical)) {
 }
 clinical$SampleID <- as.character(clinical$ID)
 clinical$diag_survival_days <- as.numeric(clinical[["Survival from diagnosis\r\n(days)"]])
-# Prefer an explicit vital/event-status field. If the public table has none,
-# retain the original cause-of-death rule but record that fallback in the
-# exported audit table so that it can be checked against the source dataset.
-status_candidates <- c("diag_event", "OS_event", "Event", "event",
-                       "Vital status", "Vital Status", "Status")
-status_col <- status_candidates[status_candidates %in% names(clinical)][1]
-if (!is.na(status_col)) {
-  raw_status <- tolower(trimws(as.character(clinical[[status_col]])))
-  clinical$diag_event <- ifelse(raw_status %in% c("1", "dead", "deceased", "death", "event"), 1,
-                                ifelse(raw_status %in% c("0", "alive", "censored", "no event"), 0,
-                                       NA_real_))
-  event_definition <- paste0("explicit_status_column:", status_col)
-} else {
-  if (!"Cause of death" %in% names(clinical)) {
-    stop("No explicit survival-status column or Cause of death column was found.")
-  }
-  clinical$diag_event <- ifelse(!is.na(clinical[["Cause of death"]]) &
-                                  trimws(as.character(clinical[["Cause of death"]])) != "", 1, 0)
-  event_definition <- "fallback_nonempty_cause_of_death"
-  warning("No explicit survival-status column found; event status was inferred from non-empty Cause of death. Review before publication.")
-}
+# Table S1 records overall-survival events through the Cause of death field:
+# a recorded cause denotes death (event=1), while a blank field denotes a
+# censored observation (event=0). This is the rule used for the 44-patient
+# manuscript cohort and is written into the exported audit table.
+cause_of_death <- trimws(as.character(clinical[["Cause of death"]]))
+clinical$diag_event <- as.integer(!is.na(cause_of_death) & nzchar(cause_of_death))
+event_definition <- "Table_S1_nonempty_Cause_of_death_is_event"
 clinical$HSC_CD69high_score <- hsc_high_score[match(clinical$SampleID, names(hsc_high_score))]
 clinical_valid <- clinical[!is.na(clinical$HSC_CD69high_score) &
                              !is.na(clinical$diag_survival_days) &

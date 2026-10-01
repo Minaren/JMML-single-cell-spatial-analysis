@@ -101,20 +101,33 @@ for (nm in names(module_list)) {
 }
 
 # --- 3. transcription-factor target scoring ---------------------------------
-tf_file <- file.path(gene_dir, "tf_targets_mouse.csv")
-tf_targets <- NULL
-if (file.exists(tf_file)) {
-  tf_targets <- read_gene_sets(tf_file)
-  tf_targets <- lapply(tf_targets, function(x) intersect(unique(x), rownames(HSC)))
-  tf_targets <- tf_targets[lengths(tf_targets) >= 5L]
-  for (tf in names(tf_targets)) {
-    HSC <- AddModuleScore(HSC, features = tf_targets[tf],
-                          name = paste0(tf, "_Score"), ctrl = min(100, nrow(HSC)))
-    colnames(HSC@meta.data)[ncol(HSC@meta.data)] <- paste0(tf, "_Score")
-  }
-} else {
-  warning("Exact Figure 2F TF target file is absent; TF scoring was skipped. ",
-          "Add data/gene_sets/tf_targets_mouse.csv (set,gene) to reproduce it.")
+# Restored verbatim from the retained original working script
+# code/合并样本8.R (initial repository commit 01da390). These compact target
+# modules were used for the pseudotime TF-activity panel; they are not inferred
+# from the current data and therefore remain fixed in this release.
+tf_targets <- list(
+  Nfkb1 = c("Tnf", "Il1b", "Il6", "Ccl4", "Cxcl10", "Icam1", "Vcam1"),
+  Fos   = c("Jun", "Junb", "Jund", "Egr1", "Atf3", "Dusp1"),
+  Stat3 = c("Socs3", "Il6", "Ccl4", "Bcl2", "Myc", "Junb"),
+  Jun   = c("Fos", "Egr1", "Junb", "Ccl4", "Il1b", "Tnf")
+)
+tf_overlap <- bind_rows(lapply(names(tf_targets), function(nm) {
+  present <- intersect(tf_targets[[nm]], rownames(HSC))
+  missing <- setdiff(tf_targets[[nm]], rownames(HSC))
+  data.frame(TF = nm, n_present = length(present), n_missing = length(missing),
+             missing_genes = paste(missing, collapse = ";"))
+}))
+write.csv(tf_overlap, file.path(output_dir, "HSC_TF_target_overlap.csv"),
+          row.names = FALSE)
+tf_targets <- lapply(tf_targets, function(x) intersect(x, rownames(HSC)))
+if (any(lengths(tf_targets) < 5L)) {
+  stop("At least one restored TF module has fewer than five detected genes; ",
+       "see HSC_TF_target_overlap.csv.")
+}
+for (tf in names(tf_targets)) {
+  HSC <- AddModuleScore(HSC, features = tf_targets[tf],
+                        name = paste0(tf, "_Score"), ctrl = min(100, nrow(HSC)))
+  colnames(HSC@meta.data)[ncol(HSC@meta.data)] <- paste0(tf, "_Score")
 }
 
 # --- 4. Slingshot trajectory and GAM-smoothed trends ------------------------
@@ -122,7 +135,9 @@ if (file.exists(tf_file)) {
 rd <- Embeddings(HSC, "umap")
 cl <- as.character(Idents(HSC))
 sds <- slingshot(rd, cl, start.clus = "1")
-HSC$pseudotime <- sds@curves[[1]]$lambda[rownames(Embeddings(HSC, "umap"))]
+pseudotime_matrix <- slingPseudotime(sds)
+if (!ncol(pseudotime_matrix)) stop("Slingshot returned no pseudotime lineage.")
+HSC$pseudotime <- pseudotime_matrix[rownames(Embeddings(HSC, "umap")), 1]
 
 # GAM fit of module scores and Cd69 against pseudotime (per-cluster trends)
 pseudo_df <- data.frame(
@@ -144,7 +159,7 @@ ggsave(file.path(fig_dir, "Fig_Dynamics_Modules_Cd69.pdf"), p_dynamics,
 
 # --- 5. module correlation (Spearman) ---------------------------------------
 score_vars <- paste0(names(module_list), "_Score")
-if (!is.null(tf_targets)) score_vars <- c(score_vars, paste0(names(tf_targets), "_Score"))
+score_vars <- c(score_vars, paste0(names(tf_targets), "_Score"))
 cor_data <- FetchData(HSC, vars = score_vars)
 cor_mat <- cor(cor_data, method = "spearman")
 write.csv(cor_mat, file.path(output_dir, "HSC_module_correlation.csv"))

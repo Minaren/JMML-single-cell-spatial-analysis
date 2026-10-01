@@ -41,15 +41,21 @@ code_publication/
   harmony, spacexr (RCTD), GSVA (v2.2.0), slingshot, mgcv, igraph,
   clusterProfiler, DESeq2, org.Mm.eg.db, RANN, survival, survminer
 - External software:
-  - Cell Ranger v6.0.1 (10x Genomics) for scRNA-seq preprocessing
+  - Cell Ranger v6.0.1 (10x Genomics) for scRNA-seq preprocessing, as recorded
+    by the manuscript/authors. GSE313553 currently reports v2.1.1; this
+    external metadata conflict is a release blocker documented below.
   - BSTMatrix v1.0 (Biomarker Technologies) for spatial transcriptomic upstream
     processing (reads mapped to the mouse reference genome mm10; exact build to
     be confirmed)
-  - CellPhoneDB v5 for the corrected rerun; the runner records the exact
-    package version and database checksum. The original run's version was not retained.
+  - CellPhoneDB v5.0.1 with cellphonedb-data v5.0.0; the runner records the
+    installed package version and database checksum.
 - See environment/packages.R for the full package list. To lock a reproducible
   environment with renv: `renv::init()`, install the packages, then
   `renv::snapshot()`.
+- `environment/requirements-cellphonedb-lock.txt` records the complete tested
+  Python environment for CellPhoneDB v5.0.1. Install it in a dedicated virtual
+  environment with
+  `python -m pip install -r environment/requirements-cellphonedb-lock.txt`.
 
 ## Run guide
 
@@ -73,6 +79,14 @@ Rscript scripts/08_cell_cell_communication.R
 Rscript scripts/09_NB4_bulk_RNAseq.R              # independent bulk analysis
 ```
 
+Before an analysis run, execute the release-gate checks from the repository
+root:
+
+```
+python code_publication/tests/static_validation.py
+python code_publication/tests/test_prepare_cellphonedb_inputs.py
+```
+
 ### Required input data
 
 1. Mouse HSPC 10x output (this study; Kras and WT) -> data/raw/mouse_HSPC/
@@ -88,17 +102,17 @@ Rscript scripts/09_NB4_bulk_RNAseq.R              # independent bulk analysis
    GSE313878) -> data/spatial/ST_WT/, data/spatial/ST_Kras/
 6. Bulk RNA-seq + clinical data GSE71449 (ids_exprs.csv, Table_S1.xlsx) ->
    data/bulk/GSE71449/
-7. NB4 processed count matrix GSE313879 plus an explicit two-column
-   `sample_metadata.tsv` (`sample_id`, `condition`) -> data/bulk/GSE313879/
+7. NB4 processed count matrix GSE313879 plus the included GEO-verified
+   `sample_metadata.tsv` -> data/bulk/GSE313879/
 
 See data/README.md for details, accessions and the BMK output format.
 
 ### Cell-cell communication (CellPhoneDB)
 
-CellPhoneDB uses human ligand-receptor identifiers. After script 07, provide
-`data/reference/mouse_to_human_orthologues.tsv` with columns `mouse_symbol` and
-`human_symbol`, together with a README recording the mapping resource, version
-and download date. Script 08_prepare_cellphonedb_inputs.py excludes ambiguous
+CellPhoneDB uses human ligand-receptor identifiers. The release includes
+`data/reference/mouse_to_human_orthologues.tsv`, generated from the official
+MGI mouse-human homology report downloaded on 2026-09-30, together with source
+and output checksums. Script 08_prepare_cellphonedb_inputs.py excludes ambiguous
 one-mouse-to-many-human mappings, sums many-mouse-to-one-human counts, and
 writes sparse h5ad plus metadata. The versioned runner then supplies metadata
 first and counts second through the official CellPhoneDB v5 Python API:
@@ -145,10 +159,11 @@ Two annotation approaches were used in the original analysis:
 2. label transfer from the GSE122465 healthy bone-marrow reference
    (cross-validation; script 02).
 
-The manuscript reports the marker-based annotation. Mouse annotation is now
-applied to the active `seurat_clusters` generated at resolution 1.2. Human
-clusters without a retained original mapping are preserved as
-`Unassigned_<cluster>` and their markers are exported for author review.
+The manuscript reports the marker-based annotation. Mouse annotation is
+applied to the active `seurat_clusters` generated at resolution 1.2. The full
+human 0-19 cluster map was restored from the retained manuscript-generation
+script in initial Git commit `01da390`; script 05 stops if an observed cluster
+falls outside that map.
 
 ## Notes and uncertainties
 
@@ -162,10 +177,13 @@ clusters without a retained original mapping are preserved as
   GSE313878; the experimental protocol is described
   in the Biomarker Technologies methods document (BMKMANU S1000 Spatial
   transcriptomics Materials and method) and summarised in data/README.md.
-- CellPhoneDB software/database version, orthologue mapping resource, exact
-  BSTMatrix mm10 reference build, the complete human cluster map and the exact
-  Figure 2F TF target list remain author-supplied provenance items. The scripts
-  stop or skip the affected step rather than silently inventing these values.
+- The corrected spatial rerun uses the included versioned MGI mouse-human map.
+  Script 08 records its SHA-256 checksum; no undocumented online lookup is
+  performed. The public GSE313878 record confirms mm10 but omits the exact
+  BSTMatrix annotation release and the coordinate/image inputs required by
+  script 07; see `data/GEO_PROVENANCE_AUDIT.md`.
+- The maintained HSC pseudotime implementation is Slingshot. Historical
+  Monocle 2/3 exploratory scripts are not part of this release workflow.
 
 ## Reproducibility record
 

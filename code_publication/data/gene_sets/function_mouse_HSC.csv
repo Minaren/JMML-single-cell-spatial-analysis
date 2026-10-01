@@ -15,7 +15,7 @@ HSC_signature,Ccm2
 HSC_signature,Ndufa9
 HSC_signature,Galnt1
 HSC_signature,Raf1
-HSC_signature,1-Sep
+HSC_signature,Sept1
 HSC_signature,Wdr77
 HSC_signature,Atp5f1
 HSC_signature,Hnrnpd
@@ -94,7 +94,7 @@ HSC_signature,Chordc1
 HSC_signature,Rtcb
 HSC_signature,Pwp1
 HSC_signature,Capns1
-HSC_signature,7-Sep
+HSC_signature,Sept7
 HSC_signature,Rac1
 HSC_signature,Nup214
 HSC_signature,Ugp2
@@ -1710,7 +1710,7 @@ HSC_signature,Eif4e2
 HSC_signature,Ndufa10
 HSC_signature,Rnpepl1
 HSC_signature,Ppp1r7
-HSC_signature,2-Sep
+HSC_signature,Sept2
 HSC_signature,Stk25
 HSC_signature,Atg4b
 HSC_signature,Dtymk
@@ -1837,7 +1837,7 @@ HSC_signature,Nmi
 HSC_signature,Anapc2
 HSC_signature,Ssna1
 HSC_signature,Arrdc1
-HSC_signature,7-Mar
+HSC_signature,March7
 HSC_signature,Psd4
 HSC_signature,Hnmt
 HSC_signature,Baz2b
@@ -3098,7 +3098,7 @@ HSC_signature,Ss18
 HSC_signature,Paip2
 HSC_signature,Sh3glb1
 HSC_signature,Rbmxl1
-HSC_signature,15-Sep
+HSC_signature,Sep15
 HSC_signature,Rnf139
 HSC_signature,Setd7
 HSC_signature,D15Ertd621e
@@ -3309,7 +3309,7 @@ HSC_signature,Pigk
 HSC_signature,Psmd7
 HSC_signature,Zzz3
 HSC_signature,Rreb1
-HSC_signature,6-Mar
+HSC_signature,March6
 HSC_signature,Atp6v1g1
 HSC_signature,Prune2
 HSC_signature,Cdc123
@@ -3786,7 +3786,7 @@ HSC_signature,Lsm10
 HSC_signature,Lgr4
 HSC_signature,Pigm
 HSC_signature,Rictor
-HSC_signature,6-Sep
+HSC_signature,Sept6
 HSC_signature,Fbxo46
 HSC_signature,Lamtor4
 HSC_signature,Tor1aip2
@@ -4033,7 +4033,7 @@ HSC_signature,Rpl36
 HSC_signature,Zfp329
 HSC_signature,Unc13d
 HSC_signature,Mdn1
-HSC_signature,11-Sep
+HSC_signature,Sept11
 HSC_signature,Sdhc
 HSC_signature,Gstm1
 HSC_signature,Cryzl1
@@ -4184,7 +4184,7 @@ HSC_signature,Rpl7a
 HSC_signature,Atp5g2
 HSC_signature,Cebpzos
 HSC_signature,Ppox
-HSC_signature,l7Rn6
+HSC_signature,I7Rn6
 HSC_signature,4833420G17Rik
 HSC_signature,Actg1
 HSC_signature,Phactr2
@@ -4600,7 +4600,7 @@ Ly,Fcrla
 Ly,Ccl5
 Ly,Ncr1
 Ly,Cd3d
-Quiescence,lgf2bp2
+Quiescence,Igf2bp2
 Quiescence,Ahnak
 Quiescence,Mpo
 Quiescence,Plac8
@@ -4620,7 +4620,7 @@ Quiescence,F13a1
 Quiescence,A930006K02Rik
 Quiescence,A330023F24Rik
 Quiescence,Sorl1
-Quiescence,lrf8
+Quiescence,Irf8
 Quiescence,Xdh
 Quiescence,Anxa2
 Quiescence,Ccr2
@@ -4634,7 +4634,7 @@ Quiescence,Nucb2
 Quiescence,Elane
 Quiescence,Amica1
 Quiescence,Kcnh7
-Quiescence,lfitm6
+Quiescence,Ifitm6
 Quiescence,Cfp
 Quiescence,Hvcn1
 Quiescence,Smarca5-ps
@@ -4645,7 +4645,7 @@ Quiescence,Lgals3
 Quiescence,Rassf4
 Quiescence,Ccr1
 Quiescence,Ncf1
-Quiescence,lgf1
+Quiescence,Igf1
 Quiescence,Cd2
 Quiescence,Lrp4
 Quiescence,Dbf4
@@ -4689,7 +4689,7 @@ Quiescence,Nova1
 Quiescence,Pik3r6
 Quiescence,B3galt2
 Quiescence,Bmp8a
-Quiescence,lrak2
+Quiescence,Irak2
 Quiescence,Klhl35
 Quiescence,Wfdc21
 Quiescence,Sell
@@ -4811,7 +4811,7 @@ G2M_phase,Ndc80
 G2M_phase,Cdc25c
 G2M_phase,Kif11
 G2M_phase,Gtse1
-Quiescence,lgf2bp2
+Quiescence,Igf2bp2
 Quiescence,Ahnak
 Quiescence,Mpo
 Quiescence,Plac8
@@ -4831,7 +4831,7 @@ Quiescence,F13a1
 Quiescence,A930006K02Rik
 Quiescence,A330023F24Rik
 Quiescence,Sorl1
-Quiescence,lrf8
+Quiescence,Irf8
 Quiescence,Xdh
 Quiescence,Anxa2
 Quiescence,Ccr2
@@ -4845,7 +4845,7 @@ Quiescence,Nucb2
 Quiescence,Elane
 Quiescence,Amica1
 Quiescence,Kcnh7
-Quiescence,lfitm6
+Quiescence,Ifitm6
 Quiescence,Cfp
 Quiescence,Hvcn1
 Quiescence,Smarca5-ps
@@ -4856,7 +4856,7 @@ Quiescence,Lgals3
 Quiescence,Rassf4
 Quiescence,Ccr1
 Quiescence,Ncf1
-Quiescence,lgf1
+Quiescence,Igf1
 Quiescence,Cd2
 Quiescence,Lrp4
 Quiescence,Dbf4
@@ -4900,7 +4900,7 @@ Quiescence,Nova1
 Quiescence,Pik3r6
 Quiescence,B3galt2
 Quiescence,Bmp8a
-Quiescence,lrak2
+Quiescence,Irak2
 Quiescence,Klhl35
 Quiescence,Wfdc21
 Quiescence,Sell
@@ -4978,7 +4978,7 @@ LT_HSC,Grb10
 LT_HSC,Gm11361
 LT_HSC,Rpl13a
 LT_HSC,Nadk2
-LT_HSC,lfitm7
+LT_HSC,Ifitm7
 LT_HSC,Trpc6
 LT_HSC,Rpl10-ps3
 LT_HSC,Nrgn
@@ -4990,7 +4990,7 @@ LT_HSC,Tcf15
 LT_HSC,Gfi1b
 LT_HSC,Eef2
 LT_HSC,Rpl27-ps3
-LT_HSC,lfitm3
+LT_HSC,Ifitm3
 LT_HSC,Plxnc1
 LT_HSC,Rps27rt
 LT_HSC,Slc18a2
@@ -5019,7 +5019,7 @@ LT_HSC,Tbxas1
 LT_HSC,Rpl36a-ps1
 LT_HSC,Ubl7
 LT_HSC,Cd63
-LT_HSC,Epb41I4b
+LT_HSC,Epb41l4b
 LT_HSC,Pdlim1
 LT_HSC,Nedd4
 LT_HSC,Wdr89
@@ -5031,7 +5031,7 @@ LT_HSC,Tubb4b
 LT_HSC,Hsd17b10
 LT_HSC,Slc48a1
 LT_HSC,Wfdc2
-LT_HSC,lfitm1
+LT_HSC,Ifitm1
 LT_HSC,Bola2
 LT_HSC,Ccnd3
 LT_HSC,Tsc22d3

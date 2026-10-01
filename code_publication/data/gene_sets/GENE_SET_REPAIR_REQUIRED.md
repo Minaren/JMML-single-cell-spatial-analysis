@@ -1,18 +1,27 @@
-# Gene-set source repair required
+# Gene-set repair record
 
-The following entries have the characteristic form of spreadsheet date
-conversion and must be restored from the original gene-set source before the
-v1.1.0 analysis is run. They are intentionally not guessed in this repository.
+The v1.1.0 audit repaired spreadsheet date conversion and capital-I/lowercase-l
+transcription errors in the retained mouse gene-set files. The repaired symbols
+use the historical mouse symbols expected by the mm10-era expression matrices;
+some now have newer MGI symbols (for example, `Sept1` is now `Septin1`, and
+`Sep15` is now `Selenof`).
 
-| File | Suspicious entries |
+| Corrupted value | Restored value |
 |---|---|
-| `gsva_mouse_cluster.csv` | `1-Sep` (two rows) |
-| `function_mouse_HSC.csv` | `1-Sep`, `7-Sep`, `2-Sep`, `7-Mar`, `15-Sep`, `6-Mar`, `6-Sep`, `11-Sep` |
+| `1-Sep`, `2-Sep`, `6-Sep`, `7-Sep`, `11-Sep` | `Sept1`, `Sept2`, `Sept6`, `Sept7`, `Sept11` |
+| `15-Sep` | `Sep15` |
+| `6-Mar`, `7-Mar` | `March6`, `March7` |
+| leading lowercase `l` in known symbols | leading uppercase `I` (for example `Ifitm1`, `Irf8`, `Itga2b`) |
+| embedded capital `I` in known lowercase-l positions | lowercase `l` (for example `Epb41l4b`, `Ifi27l2a`, `Pcp4l1`, `Med13l`, `mt-Nd4l`) |
 
-After restoration, record the source publication/database and perform a
-case-sensitive match against the mouse expression matrix. `read_gene_sets()`
-stops when any date-like entry remains, preventing silent use of corrupted gene
-symbols.
+The original unmodified values remain recoverable from initial Git commit
+`01da390`. NCBI Gene/MGI records were used to check symbol identity and aliases:
 
-`function_mouse_HSC.csv` also contains duplicated set-gene pairs. These should
-be deduplicated only after the original source has been recovered and checked.
+- <https://www.ncbi.nlm.nih.gov/gene/54204> (`Septin1`; alias `Sept1`)
+- <https://www.ncbi.nlm.nih.gov/gene/93684> (`Selenof`; alias `Sep15`)
+- <https://www.ncbi.nlm.nih.gov/gene/223455> (`Marchf6`; alias `March6`)
+- <https://www.ncbi.nlm.nih.gov/gene/57438> (`Marchf7`; alias `March7`)
+
+`read_gene_sets()` still stops if a date-like value reappears. Duplicate
+set-gene pairs are de-duplicated in memory by `read_gene_sets()` and are left in
+the source file so the retained list remains auditable against its origin.

@@ -28,6 +28,16 @@ validation and the GitHub/Zenodo release are complete.
   undocumented default-parameter analysis was reproducible.
 - Added early checks for retained cell counts, missing inputs, gene-set overlap,
   missing annotations and spreadsheet-corrupted gene symbols.
+- Restored the complete human cluster 0-19 annotation map and the original
+  Nfkb1/Fos/Stat3/Jun target modules from commit `01da390`.
+- Repaired date-converted and I/l-corrupted mouse gene symbols, with an
+  auditable repair record.
+- Fixed the GSE71449 event definition to the manuscript cohort rule based on
+  the Table S1 `Cause of death` field.
+- Added the GEO-verified six-sample GSE313879 metadata and a versioned MGI
+  mouse-human orthologue map with checksums.
+- Added a fully pinned CellPhoneDB v5.0.1 Python lock file and an automated
+  sparse orthologue-conversion/h5ad regression test.
 
 ## Documentation corrections
 
@@ -40,12 +50,11 @@ validation and the GitHub/Zenodo release are complete.
 
 ## Validation still required before release
 
-- Restore date-converted gene symbols from the original gene-set source.
-- Supply the exact Figure 2F transcription-factor target list.
-- Complete the human cluster 10-19 annotation map or justify their exclusion.
-- Supply and archive the exact mouse-human orthologue mapping resource.
-- Record the CellPhoneDB software/database versions and BSTMatrix reference
-  annotation release.
-- Validate the GSE71449 event-status definition against the source table.
+- Correct or explain the Cell Ranger conflict (GEO: v2.1.1; manuscript/code:
+  v6.0.1) in GSE313553.
+- Correct the `BMKMANU S1001` typo in the WT GSE313878 sample record and supply
+  the spatial coordinates/images and RCTD reference files absent from GEO.
+- Retain the BSTMatrix v1.0 pipeline log/vendor report; GEO confirms mm10 but
+  does not state the exact annotation release.
 - Run all scripts in the locked R/Python environment and compare numerical
   outputs with the manuscript figures and supplementary tables.

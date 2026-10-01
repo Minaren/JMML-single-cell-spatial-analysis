@@ -85,9 +85,9 @@ def main() -> None:
         name: package_version(name)
         for name in ("cellphonedb", "anndata", "numpy", "pandas", "scipy")
     }
-    if not versions["cellphonedb"].startswith("5."):
+    if versions["cellphonedb"] != "5.0.1":
         raise RuntimeError(
-            "This runner was written for CellPhoneDB v5; installed version is "
+            "This release requires CellPhoneDB 5.0.1; installed version is "
             + versions["cellphonedb"]
         )
 

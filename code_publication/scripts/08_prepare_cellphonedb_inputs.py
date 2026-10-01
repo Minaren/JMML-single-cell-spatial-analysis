@@ -119,15 +119,23 @@ def prepare_sample(project: Path, sample: str, mapping_path: Path) -> None:
     human_counts = map_matrix @ matrix
 
     obs = common[["barcode", "cell_type"]].copy().set_index("barcode")
-    obs.index = obs.index.astype(str)
-    obs.index = obs.index.str.replace("-", "_", regex=False)
+    # Force Python-object strings rather than pandas' nullable StringArray.
+    # anndata 0.10.x cannot serialise StringArray-backed indices/columns when
+    # used with newer pandas releases.
+    obs.index = pd.Index(
+        [str(value).replace("-", "_") for value in obs.index],
+        dtype=object,
+        name="Cell",
+    )
+    obs["cell_type"] = obs["cell_type"].map(str).astype(object)
     if obs.index.has_duplicates:
         raise ValueError("Barcode sanitisation produced duplicate CellPhoneDB cell names")
-    var = pd.DataFrame(index=human_symbols.astype(str))
+    var = pd.DataFrame(index=pd.Index([str(value) for value in human_symbols],
+                                     dtype=object, name="gene"))
     adata = ad.AnnData(X=human_counts.T.tocsr(), obs=obs, var=var)
     adata.write_h5ad(output / f"counts_{sample}.h5ad", compression="gzip")
 
-    meta = obs.reset_index().rename(columns={"barcode": "Cell", "cell_type": "cell_type"})
+    meta = obs.reset_index()
     meta.to_csv(output / f"meta_{sample}.tsv", sep="\t", index=False)
     mapping_sha256 = hashlib.sha256(mapping_path.read_bytes()).hexdigest()
     pd.DataFrame(

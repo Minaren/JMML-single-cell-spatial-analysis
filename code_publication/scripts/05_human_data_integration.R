@@ -55,38 +55,36 @@ sce.harm <- RunUMAP(sce.har, dims = 1:30, reduction = "harmony")
 observed_cluster_ids <- sort(unique(as.integer(as.character(sce.harm$seurat_clusters))))
 celltype <- data.frame(ClusterID = observed_cluster_ids,
                        celltype = paste0("Unassigned_", observed_cluster_ids))
-celltype[celltype$ClusterID == 9, "celltype"] <- "HSC"
+# Full resolution-1.2 map restored from the retained manuscript-generation
+# script 投稿2.0.R (initial repository commit 01da390, lines 756-768).
 celltype[celltype$ClusterID == 0, "celltype"] <- "MPP"
 celltype[celltype$ClusterID == 1, "celltype"] <- "CMP"
-celltype[celltype$ClusterID == 2, "celltype"] <- "GMP"
-celltype[celltype$ClusterID == 3, "celltype"] <- "MEP"
-celltype[celltype$ClusterID == 4, "celltype"] <- "CLP"
-celltype[celltype$ClusterID == 5, "celltype"] <- "B"
-celltype[celltype$ClusterID == 6, "celltype"] <- "T"
-celltype[celltype$ClusterID == 7, "celltype"] <- "NK"
-celltype[celltype$ClusterID == 8, "celltype"] <- "Mono"
-# Clusters 10-19 were not assigned in the retained original code. They are
-# kept explicitly as Unassigned_<cluster> rather than converted to NA or
-# silently discarded. Their markers are exported for author review.
+celltype[celltype$ClusterID %in% c(2, 6, 16), "celltype"] <- "Monocyte"
+celltype[celltype$ClusterID %in% c(3, 5, 10, 15), "celltype"] <- "Granulocyte"
+celltype[celltype$ClusterID %in% c(4, 17), "celltype"] <- "CLP"
+celltype[celltype$ClusterID == 8, "celltype"] <- "LMPP"
+celltype[celltype$ClusterID == 9, "celltype"] <- "HSC"
+celltype[celltype$ClusterID == 11, "celltype"] <- "proB"
+celltype[celltype$ClusterID %in% c(7, 12, 13, 19), "celltype"] <- "Erythroid_Progenitor"
+celltype[celltype$ClusterID == 14, "celltype"] <- "Macrophage"
+celltype[celltype$ClusterID == 18, "celltype"] <- "MK"
+if (any(grepl("^Unassigned_", celltype$celltype))) {
+  stop("The restored human cluster map does not cover every observed cluster: ",
+       paste(celltype$ClusterID[grepl("^Unassigned_", celltype$celltype)], collapse = ", "))
+}
 
 sce.harm$celltype <- NA_character_
 for (i in seq_len(nrow(celltype))) {
-  sce.harm@meta.data[which(sce.harm@meta.data$seurat_clusters == celltype$ClusterID[i]),
+  sce.harm@meta.data[which(as.character(sce.harm@meta.data$seurat_clusters) ==
+                             as.character(celltype$ClusterID[i])),
                      "celltype"] <- celltype$celltype[i]
 }
+if (anyNA(sce.harm$celltype)) stop("At least one human cell did not receive a cell-type label.")
 Idents(sce.harm) <- "celltype"
 saveRDS(sce.harm, file.path(output_dir, "human_bone_marrow.rds"))
 
-unassigned_cells <- rownames(sce.harm@meta.data)[grepl("^Unassigned_", sce.harm$celltype)]
-if (length(unassigned_cells)) {
-  unassigned <- subset(sce.harm, cells = unassigned_cells)
-  Idents(unassigned) <- "seurat_clusters"
-  unassigned_markers <- FindAllMarkers(unassigned, only.pos = TRUE,
-                                       logfc.threshold = 0.25, min.pct = 0.1)
-  write.csv(unassigned_markers,
-            file.path(output_dir, "human_unassigned_cluster_markers.csv"),
-            row.names = FALSE)
-}
+write.csv(celltype, file.path(output_dir, "human_cluster_annotation_map.csv"),
+          row.names = FALSE)
 
 # --- 4. GSVA validation of annotations --------------------------------------
 genesets <- read_gene_sets(file.path(gene_dir, "gsva_human_cluster.csv"))

@@ -7,7 +7,7 @@ DESeq2	Not recorded	Capture from the v1.1.0 rerun environment
 CellChat	1.6.1	Reported in manuscript; exact inference code/parameters were not retained
 Cell Ranger	6.0.1	Reported in manuscript
 BSTMatrix	1.0	Reported in manuscript
-CellPhoneDB	5.x	Exact version and database checksum are written by 08_run_cellphonedb.py
+CellPhoneDB	5.0.1	Original repository record; database release 5.0.0; checksums are written by 08_run_cellphonedb.py
 spacexr/RCTD	Not recorded	Capture from analysis environment
 Harmony	Not recorded	Capture from analysis environment
 Slingshot	Not recorded	Capture from analysis environment

@@ -1,0 +1,10 @@
+{
+  "download_date": "2026-09-30",
+  "filtering": "all mouse-human pairs sharing an MGI DB Class Key",
+  "output_file": "mouse_to_human_orthologues.tsv",
+  "output_sha256": "a29e715e588d599b223afebc479834641551d2b605d5e99910fcd5de98c257ab",
+  "pair_count": 24584,
+  "source": "Mouse Genome Informatics HOM_MouseHumanSequence report",
+  "source_sha256": "b8220b7689f11066c3d82e0f24c23ba3c7a30ad26a0f24ab639357aebc09582d",
+  "source_url": "https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt"
+}

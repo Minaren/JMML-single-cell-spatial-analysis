@@ -18,6 +18,18 @@
   used for the high-density spatial data.
 - Python syntax, JSON/YAML metadata, Git integrity and whitespace checks are
   included in the validation record produced for this working tree.
+- A synthetic regression test verifies sparse mouse-to-human count aggregation,
+  exclusion of ambiguous one-to-many orthologues, barcode sanitisation and
+  h5ad/metadata output with the locked CellPhoneDB Python environment.
+- The full human cluster map and compact TF modules were recovered from initial
+  commit `01da390`; repaired gene-set values are documented in
+  `code_publication/data/gene_sets/GENE_SET_REPAIR_REQUIRED.md`.
+- GSE71449 overall-survival events are defined by non-empty Table S1
+  `Cause of death` values, matching the retained cohort analysis record.
+- The corrected CellPhoneDB rerun uses the included MGI mouse-human homology
+  report mapping downloaded on 2026-09-30; source/output checksums are recorded.
+- GSE313879 sample IDs and NC/OE assignments were verified against the public
+  GEO family record and are included in the repository.
 
 ## Validation boundary
 
@@ -29,18 +41,10 @@ until those checks pass.
 
 ## Inputs/provenance still required
 
-1. Restore spreadsheet-corrupted gene symbols in the mouse gene-set files from
-   the original source.
-2. Supply the exact transcription-factor target lists used for Figure 2F as
-   `data/gene_sets/tf_targets_mouse.csv`.
-3. Complete or formally exclude human clusters 10-19 after reviewing the
-   exported marker table.
-4. Supply the exact mouse-human orthologue table and archive its database name,
-   version, download date and URL.
-5. Record the CellPhoneDB software/database versions and the exact BSTMatrix
-   mm10 annotation release.
-6. Validate the GSE71449 event-status rule against the source clinical table.
-7. Provide `sample_metadata.tsv` for the three NC and three OE GSE313879
-   libraries and compare DESeq2 results with the manuscript bulk-RNA outputs.
-8. Confirm whether the final trajectory figure was generated with Slingshot or
-   Monocle 2; the current script implements Slingshot.
+1. Resolve the GSE313553 Cell Ranger version conflict: GEO states v2.1.1,
+   whereas the manuscript/code state v6.0.1.
+2. Correct the GSE313878 WT platform typo (`BMKMANU S1001`) and provide the
+   coordinate/image and RCTD reference inputs absent from GEO.
+3. Retain the BSTMatrix v1.0 run record and exact mm10 annotation release.
+4. Run the full R/Python workflow against the deposited inputs and compare the
+   numerical outputs with every manuscript panel and supplementary table.

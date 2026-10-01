@@ -1,5 +1,5 @@
-anndata
-cellphonedb>=5,<6
-numpy
-pandas
-scipy
+anndata==0.10.9
+cellphonedb==5.0.1
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.13.1

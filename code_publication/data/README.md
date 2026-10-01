@@ -25,7 +25,6 @@ data/
 │   ├── gsva_mouse_cluster.csv    # curated module gene sets (mouse)
 │   ├── gsva_human_cluster.csv    # curated module gene sets (human)
 │   ├── function_mouse_HSC.csv    # HSC functional gene sets (mouse)
-│   └── tf_targets_mouse.csv      # exact Figure 2F targets (set,gene; author supplied)
 ├── spatial/
 │   ├── ST_WT/  ST_Kras/          # BMKMANU S1000 output (see format note below)
 │   ├── sc_meta.txt               # single-cell reference counts matrix (genes x cells)
@@ -57,12 +56,13 @@ directories JMMLID5 and PBM2.
 
 For GSE313879, `sample_metadata.tsv` must contain exactly three `NC` and three
 `OE` rows, and `sample_id` must exactly match the processed count-matrix column
-names. The script never infers biological groups from filenames.
+names. The release includes the GEO-verified metadata for `NB4_NC1`-`NB4_NC3`
+and `NB4_OE1`-`NB4_OE3`; the script never infers biological groups from
+filenames.
 
-The retained original repository did not contain the exact transcription-factor
-target lists used for Figure 2F. Add them as a two-column, header-free
-`tf_targets_mouse.csv` (`set,gene`). Script 03 skips that panel with a warning
-when the file is absent rather than using illustrative targets.
+The compact Nfkb1, Fos, Stat3 and Jun target modules used in the pseudotime
+TF-activity panel are embedded in script 03. They were restored from the
+retained original working script in initial Git commit `01da390`.
 
 ## Spatial transcriptomic data
 

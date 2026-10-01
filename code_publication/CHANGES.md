@@ -19,6 +19,12 @@
 - Added checks for expected cell counts, missing mappings, corrupt gene symbols
   and insufficient signature overlap.
 - Corrected the public status and manufacturer depth wording for GSE313878.
+- Restored the complete human resolution-1.2 cluster map and the four compact
+  TF target modules from the initial repository commit.
+- Repaired spreadsheet-date and I/l transcription errors in the mouse gene
+  sets and documented every repair.
+- Made the GSE71449 event rule explicit: a non-empty Table S1 `Cause of death`
+  value is an overall-survival event; blank values are censored.
 
 See the repository-level `RELEASE_NOTES_v1.1.0-draft.md` for validation items
 that must be resolved before this development version is released.

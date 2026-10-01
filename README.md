@@ -18,10 +18,11 @@ public data accessions are listed in `code_publication/data/README.md`.
 The DOI-linked software release `v1.0.0` remains available from Zenodo at
 <https://doi.org/10.5281/zenodo.22207699>.
 
-The current main branch contains an audited `v1.1.0-dev` correction set. It
-must be numerically rerun against the deposited inputs before being tagged as
-`v1.1.0`; it does not replace or rewrite the archived v1.0.0 DOI record. See
-`RELEASE_NOTES_v1.1.0-draft.md` and `CODE_VALIDATION.md`.
+The audited `v1.1.0-dev` correction set is being prepared on a development
+branch. It must be numerically rerun against the deposited inputs before being
+merged and tagged as `v1.1.0`; it does not replace or rewrite the archived
+v1.0.0 DOI record. See `RELEASE_NOTES_v1.1.0-draft.md` and
+`CODE_VALIDATION.md`.
 
 Suggested citation:
 
@@ -35,8 +36,9 @@ Suggested citation:
 - Key R packages: Seurat (v4.3.0), harmony, spacexr (RCTD), GSVA
   (v2.2.0), slingshot, mgcv, clusterProfiler, DESeq2, org.Mm.eg.db, survival,
   survminer
-- External: Cell Ranger v6.0.1; BSTMatrix v1.0 (Biomarker Technologies);
-  CellPhoneDB (the rerun must record the software and database versions)
+- External: Cell Ranger v6.0.1 as recorded by the manuscript/authors (the GEO
+  record currently says v2.1.1 and must be reconciled); BSTMatrix v1.0
+  (Biomarker Technologies); CellPhoneDB v5.0.1 with cellphonedb-data v5.0.0
 
 ## License
 
