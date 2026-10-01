@@ -36,7 +36,9 @@ __pycache__/
 /code_publication/data/spatial/ref_cell_anno
 /code_publication/data/reference/GSE122465/
 /code_publication/data/bulk/GSE71449/
-/code_publication/data/bulk/GSE313879/
+/code_publication/data/bulk/GSE313879/*
+!/code_publication/data/bulk/GSE313879/README.md
+!/code_publication/data/bulk/GSE313879/sample_metadata.tsv
 
 # OS
 Thumbs.db
