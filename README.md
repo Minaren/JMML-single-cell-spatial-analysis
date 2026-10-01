@@ -1,6 +1,6 @@
 # JMML-single-cell-spatial-analysis
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22207699.svg)](https://doi.org/10.5281/zenodo.22207699)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23074368.svg)](https://doi.org/10.5281/zenodo.23074368)
 
 Analysis code for the Treg-IL-10-CD69 axis study in Kras-driven juvenile
 myelomonocytic leukemia (JMML): mouse bone-marrow HSPC and T-cell single-cell
@@ -27,9 +27,7 @@ Suggested citation:
 
 > Ren X, Li Q, Yue J, Zhang L, He A, Kong G. JMML single-cell and spatial
 > transcriptomic analysis code. Version 1.1.0. Zenodo; 2026.
-
-The version-specific v1.1.0 DOI is added after the GitHub-Zenodo archive has
-finished processing the release.
+> https://doi.org/10.5281/zenodo.23074368
 
 ## Environment
 
