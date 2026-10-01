@@ -55,8 +55,6 @@ validation and the GitHub/Zenodo release are complete.
 
 - Correct or explain the Cell Ranger conflict (GEO: v2.1.1; author-confirmed:
   v7.0.0) in GSE313553.
-- Confirm the FASTQ demultiplexing software from the original run record;
-  `bcl2fastq 5.0.1` is not an official Illumina bcl2fastq2 release.
 - Correct the `BMKMANU S1001` typo in the WT GSE313878 sample record and add
   the supplied spatial coordinates/images to GEO.
 - Retain the BSTMatrix v1.0 pipeline log/vendor report; GEO confirms mm10 but

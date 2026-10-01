@@ -27,6 +27,8 @@
   value is an overall-survival event; blank values are censored.
 - Updated the author-confirmed preprocessing version to Cell Ranger v7.0.0 and
   retained the conflicting GEO v2.1.1 entry as a release-gate item.
+- Corrected the FASTQ demultiplexing record to the author-confirmed
+  bcl2fastq2 v2.20.0.
 - Replaced unversioned dense RCTD reference exports with the annotated Seurat
   object produced by script 01, and added author-supplied spatial file
   checksums and an input-integrity validator.

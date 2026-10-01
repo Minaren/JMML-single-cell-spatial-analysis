@@ -48,10 +48,8 @@ until those checks pass.
 
 1. Resolve the GSE313553 Cell Ranger version conflict: GEO states v2.1.1,
    whereas the author confirmed v7.0.0.
-2. Resolve the demultiplexing software record: supplied `bcl2fastq 5.0.1` does
-   not correspond to an official Illumina bcl2fastq2 release.
-3. Correct the GSE313878 WT platform typo (`BMKMANU S1001`) and add the supplied
+2. Correct the GSE313878 WT platform typo (`BMKMANU S1001`) and add the supplied
    coordinate and H&E files to GEO.
-4. Retain the BSTMatrix v1.0 run record and exact mm10 annotation release.
-5. Run the full R/Python workflow against the deposited inputs and compare the
+3. Retain the BSTMatrix v1.0 run record and exact mm10 annotation release.
+4. Run the full R/Python workflow against the deposited inputs and compare the
    numerical outputs with every manuscript panel and supplementary table.

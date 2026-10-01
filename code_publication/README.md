@@ -41,6 +41,7 @@ code_publication/
   harmony, spacexr (RCTD), GSVA (v2.2.0), slingshot, mgcv, igraph,
   clusterProfiler, DESeq2, org.Mm.eg.db, RANN, survival, survminer
 - External software:
+  - bcl2fastq2 v2.20.0 (Illumina) for BCL-to-FASTQ conversion
   - Cell Ranger v7.0.0 (10x Genomics) for scRNA-seq preprocessing, as confirmed
     by the author. GSE313553 currently reports v2.1.1; this
     external metadata conflict is a release blocker documented below.

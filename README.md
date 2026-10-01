@@ -36,8 +36,8 @@ Suggested citation:
 - Key R packages: Seurat (v4.3.0), harmony, spacexr (RCTD), GSVA
   (v2.2.0), slingshot, mgcv, clusterProfiler, DESeq2, org.Mm.eg.db, survival,
   survminer
-- External: Cell Ranger v7.0.0 as confirmed by the author (the GEO record
-  currently says v2.1.1 and must be reconciled); BSTMatrix v1.0
+- External: bcl2fastq2 v2.20.0; Cell Ranger v7.0.0 as confirmed by the author
+  (the GEO record currently says v2.1.1 and must be reconciled); BSTMatrix v1.0
   (Biomarker Technologies); CellPhoneDB v5.0.1 with cellphonedb-data v5.0.0
 
 ## License

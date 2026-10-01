@@ -6,7 +6,7 @@ GSVA	2.2.0	Reported in manuscript
 DESeq2	Not recorded	Capture from the v1.1.0 rerun environment
 CellChat	1.6.1	Reported in manuscript; exact inference code/parameters were not retained
 Cell Ranger	7.0.0	Author-confirmed on 2026-10-01; GEO currently reports 2.1.1 and requires correction
-bcl2fastq2	Unresolved	Author supplied 5.0.1, which does not match Illumina's bcl2fastq2 release series; verify the run log
+bcl2fastq2	2.20.0	Author-confirmed on 2026-10-01; replaces the initially supplied invalid version 5.0.1
 BSTMatrix	1.0	Reported in manuscript
 CellPhoneDB	5.0.1	Original repository record; database release 5.0.0; checksums are written by 08_run_cellphonedb.py
 spacexr/RCTD	Not recorded	Capture from analysis environment

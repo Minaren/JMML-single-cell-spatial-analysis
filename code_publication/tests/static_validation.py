@@ -107,6 +107,8 @@ def validate_python_sources() -> None:
     versions = read(PACKAGE / "environment" / "software_versions.tsv")
     require("Cell Ranger\t7.0.0" in versions,
             "Cell Ranger is not recorded as the author-confirmed v7.0.0")
+    require("bcl2fastq2\t2.20.0" in versions,
+            "bcl2fastq2 is not recorded as the author-confirmed v2.20.0")
 
 
 def file_sha256(path: Path) -> str:

@@ -20,11 +20,11 @@ Unresolved conflict:
   be corrected or the actual pipeline log must establish which version was
   used.
 
-Additional unresolved demultiplexing record:
+Resolved demultiplexing record:
 
-- the author supplied `bcl2fastq 5.0.1`; no such release appears in Illumina's
-  official bcl2fastq2 version series. The original run log is required before
-  this version is reported in the manuscript or release metadata.
+- the initially supplied `bcl2fastq 5.0.1` did not correspond to Illumina's
+  version series. The author corrected this to bcl2fastq2 v2.20.0 on
+  2026-10-01; the release records the corrected value.
 
 ## GSE313878: BMKMANU spatial transcriptomics
 
